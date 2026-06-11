@@ -74,139 +74,93 @@ body {
   height: 540px;
 }
 
-/* ==========================================================================
-   TESTIMONIALS
-   ========================================================================== */
-.testimonials {
-  background: #FFFDF5; /* Diubah ke Putih Nuansa Kuning Lembut */
-  margin-top: 370px;
-  padding: 70px 0 70px 0;
-}
+ .banner {
+    padding: 80px 0 80px 0;
+  }
 
-.testimonials .item-review {
-  border-radius: 13px;
-  background: #fff;
-  padding: 20px;
-  border: 1px solid #FEF3C7; /* Border kuning super soft */
-}
+  .banner .copywriting {
+    padding-top: 80px;
+  }
 
-.testimonials .item-review .message, .testimonials .item-review .user .info .role {
-  font-size: 16px;
-  font-weight: 400;
-  color: #5B5575;
-  line-height: 30px;
-  min-height: 90px;
-  margin-top: 30px;
-}
+  .banner .header {
+    margin: 20px 0 20px 0;
+    font-size: 42px;
+    color: #211B3D;
+    font-weight: 600;
+  }
 
-.testimonials .item-review .user {
-  margin-top: 30px;
-}
+  .banner .support {
+    font-size: 16px;
+    font-weight: 400;
+    color: #5B5575;
+    line-height: 30px;
+  }
 
-.testimonials .item-review .user .photo {
-  width: 56px;
-  height: 56px;
-  float: left;
-  margin-right: 16px;
-}
+  .banner .cta {
+    margin-top: 30px;
+  }
 
-.testimonials .item-review .user .info {
-  padding-top: 5px;
-}
+  .banner .brands {
+    margin-top: 60px;
+  }
 
-.testimonials .item-review .user .info .name {
-  color: #211B3D;
-  font-weight: 500;
-  font-size: 18px;
-  margin-bottom: 0;
-}
+  .banner .brands img {
+    height: 30px;
+  }
 
-.testimonials .item-review .user .info .role {
-  min-height: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-}
+  .text-purple {
+    color: #ef9d1a;
+  }
+
 
 /* ==========================================================================
-   PRICING SECTION
+   TENTANG KAMI SECTION
    ========================================================================== */
-.pricing {
-  margin-top: 100px;
-  background: #D97706; /* Diubah dari Ungu ke Amber Tua */
-  padding-top: 70px;
-  max-height: 620px;
+
+.tentang_kami {
+    background-color: #eaa734 !important; /* Warna kuning pastel lembut */
 }
 
-.pricing .copywriting {
-  margin-top: 80px;
+.section-title {
+    font-weight: 700;
+    color: #212529;
+    position: relative;
+    padding-bottom: 10px;
 }
 
-.pricing .support {
-  font-size: 16px;
-  font-weight: 400;
-  color: #FEF3C7; /* Diubah ke Teks Kuning Terang Soft agar terbaca di BG gelap */
-  line-height: 30px;
-  margin-top: 30px;
+/* Garis dekorasi hijau di bawah judul */
+.section-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 60px;
+    height: 4px;
+    background-color: #198754; 
+    border-radius: 2px;
 }
 
-.pricing .table-pricing {
-  background: #fff;
-  border-radius: 40px;
-  padding: 30px;
-  border: 1px solid #FDE68A;
+.tentang_kami .support {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #333333; 
+    text-align: justify;
 }
 
-.pricing .table-pricing .price {
-  font-size: 42px;
-  font-weight: 600;
-  color: #211B3D;
-  margin-bottom: 20px;
+.map-container {
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e3e6f0;
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important;
+    transition: transform 0.3s ease;
 }
 
-.pricing .table-pricing .item-benefit-pricing img {
-  float: left;
-  margin-right: 8px;
-  margin-top: 2px;
+.map-container:hover {
+    transform: translateY(-5px);
 }
 
-.pricing .table-pricing .item-benefit-pricing p {
-  font-size: 16px;
-  font-weight: 500;
-  color: #211B3D;
-}
-
-.pricing .table-pricing .item-benefit-pricing .divider {
-  height: 1px;
-  width: 100%;
-  background: #E7E5F4;
-}
-
-.pricing .paket-gila {
-  min-height: 697px;
-}
-
-.pricing .paket-biasa {
-  min-height: 453px;
-}
-
-.clear {
-  clear: both;
-}
-
-.steps .item-step .cover {
-  height: 497px;
-}
-
-.steps .item-step .copywriting {
-  padding-top: 100px;
-}
-
-.steps .item-step .support {
-  font-size: 16px;
-  font-weight: 400;
-  color: #5B5575;
-  line-height: 30px;
-  margin-top: 30px;
+.map-container iframe {
+    display: block;
 }
 
 /* ==========================================================================
@@ -261,29 +215,6 @@ body {
   color: #211B3D;
 }
 
-.benefits {
-  margin-bottom: 100px;
-}
-
-.benefits .item-benefit .icon {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 20px;
-}
-
-.benefits .item-benefit .title {
-  font-size: 20px;
-  color: #211B3D;
-  font-weight: 500;
-}
-
-.benefits .item-benefit .support {
-  font-size: 16px;
-  font-weight: 400;
-  color: #5B5575;
-  line-height: 30px;
-}
-
 .pb-70 {
   padding-bottom: 70px;
 }
@@ -296,96 +227,6 @@ body {
   margin-bottom: 0;
 }
 
-/* ==========================================================================
-   UTILITIES & TYPOGRAPHY
-   ========================================================================== */
-.text-purple {
-  color: #F59E0B; /* Mengubah utilitas teks ungu menjadi kuning emas */
-}
-
-.text-white {
-  color: #fff !important;
-}
-
-.btn-secondary {
-  background: #FEF3C7; /* Mengubah background tombol sekunder jadi kuning soft */
-  color: #D97706;      /* Teks tombol sekunder jadi amber gelap */
-}
-
-.banner {
-  padding: 80px 0 80px 0;
-}
-
-.banner .copywriting {
-  padding-top: 80px;
-}
-
-.banner .header {
-  margin: 20px 0 20px 0;
-  font-size: 42px;
-  color: #211B3D;
-  font-weight: 600;
-}
-
-.banner .support {
-  font-size: 16px;
-  font-weight: 400;
-  color: #5B5575;
-  line-height: 30px;
-}
-
-.banner .cta {
-  margin-top: 30px;
-}
-
-.banner .brands {
-  margin-top: 60px;
-}
-
-.banner .brands img {
-  height: 30px;
-}
-
-.dashboard .table tr {
-  border: 1px solid #fff;
-}
-
-.basic-form input {
-  border: 1px solid #E7E5F4;
-  border-radius: 50px;
-  padding: 12px 20px 12px 20px;
-}
-
-.checkout {
-  padding-top: 80px;
-  padding-bottom: 80px;
-}
-
-.checkout .item-bootcamp .cover {
-  height: 255px;
-  margin-bottom: 30px;
-}
-
-.checkout .item-bootcamp .package {
-  font-size: 22px;
-  color: #31B380;
-  font-weight: 600;
-}
-
-.checkout .item-bootcamp .description {
-  font-size: 16px;
-  color: #211B3D;
-  font-weight: 400;
-  line-height: 30px;
-}
-
-.text-green {
-  color: #31B380 !important;
-}
-
-.text-red {
-  color: #f73353 !important;
-}
 
 /* ==========================================================================
    NAVBAR (Menyesuaikan dengan Gambar Mockup Anda)
@@ -422,3 +263,5 @@ body {
 .navbar .navbar-brand img {
   height: 42px;
 }
+
+
