@@ -15,9 +15,23 @@ Aplikasi berbasis web yang dirancang untuk mengelola, mendokumentasikan, dan mem
 * **Frontend:** Blade Template Engine & Tailwind CSS / Bootstrap
 * **Tools Pendukung:** Mailtrap (Pengujian Email)
 
+---
+
+## 📊 Arsitektur Database (Google Spreadsheet)
+
+Proyek ini menggunakan **Google Spreadsheet** sebagai database utama untuk menyimpan data antrian, berkas pemohon, dan log status perizinan secara real-time. Keuntungannya meliputi kemudahan monitoring langsung dari Google Drive tanpa memerlukan DBMS tambahan seperti phpMyAdmin.
+
+### ⚙️ Teknologi & Integrasi Google API
+Untuk menghubungkan Laravel dengan Google Spreadsheet, proyek ini mengintegrasikan:
+* **Google Cloud Console Service Account:** Autentikasi aman menggunakan file kredensial JSON (`credentials.json`).
+* **Google Sheets API v4:** Membaca, memperbarui, dan menyisipkan baris data antrian secara asinkron.
+* **Package Pendukung:** Google API Client Client Library untuk PHP.
+
+---
+
 ## 💻 Cara Instalasi Lokal
 
-1. **Clone repositori ini:**
+### 1. Clone Repositori
+Clone repositori ini terlebih dahulu ke direktori lokal Anda:
 ```bash
-   git clone [https://github.com/Andikaade/sistem-informasi-perizinan-tata-ruang.git](https://github.com/Andikaade/sistem-informasi-perizinan-tata-ruang.git)<img width="1782" height="875" alt="image" src="https://github.com/user-attachments/assets/8ababbda-5d0b-48e2-a5b2-5a9c6b8285d9" />
-
+git clone [https://github.com/Andikaade/sistem-informasi-perizinan-tata-ruang.git](https://github.com/Andikaade/sistem-informasi-perizinan-tata-ruang.git)
