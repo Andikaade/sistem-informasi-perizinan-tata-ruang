@@ -22,16 +22,16 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Beranda</a>
+                        <a class="nav-link active" aria-current="page" href="#beranda">Beranda</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Informasi</a>
+                        <a class="nav-link" href="#informasi">Informasi</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Tentang Kami</a>
+                        <a class="nav-link" href="#tentang_kami">Tentang Kami</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Kontak</a>
+                        <a class="nav-link" href="#kontak">Kontak</a>
                     </li>
                 </ul>
                 <div class="d-flex user-logged ms-2">
@@ -41,7 +41,7 @@
         </div>
     </nav>
 
-    <section class="banner">
+    <section class="banner" id="beranda">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-11 col-12">
@@ -96,8 +96,85 @@
             </div>
         </div>
     </section>
+    <section class="steps py-5 bg-white clearfix" id="informasi">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12 text-center text-lg-start">
+                <h2 class="fw-bold text-dark" style="font-size: 2.2rem;">Informasi Alur Pengajuan</h2>
+                <p class="text-muted">Ikuti 3 tahapan mudah berikut untuk mengurus kesesuaian tata ruang Anda di Kabupaten Sijunjung.</p>
+            </div>
+        </div>
+        
+        <div class="row align-items-center mb-5 g-4 text-lg-start text-center">
+            <div class="col-lg-6 order-1">
+                <div class="position-relative d-inline-block w-100">
+                    <img src="{{ asset('images/step1.png') }}" class="img-fluid custom-step-img" alt="Langkah 1" style="max-height: 480px !important; object-fit: contain !important; width: auto !important; margin: 0 auto; display: block;">
+                </div>
+            </div>
+            <div class="col-lg-6 order-2 ps-lg-5">
+                <span class="d-inline-block fw-bold text-warning mb-2" style="letter-spacing: 2px; font-size: 0.85rem;">
+                    ALUR PERIZINAN
+                </span>
+                <h3 class="fw-bold text-dark mb-3" style="font-size: 1.8rem; line-height: 1.3;">
+                    Siapkan Dokumen & Berkas Anda
+                </h3>
+                <p class="text-muted mb-4" style="font-size: 1rem; line-height: 1.7; text-align: justify;">
+                    Sebelum mengajukan permohonan tata ruang, pastikan Anda telah melengkapi seluruh persyaratan administrasi seperti KTP, KRK (Keterangan Rencana Kabupaten), serta sertifikat tanah yang sah untuk mempercepat proses verifikasi petugas.
+                </p>
+                <a href="#kontak" class="btn btn-secondary px-4 py-2 fw-semibold shadow-sm" style="border-radius: 8px;">
+                    Tanya Persyaratan
+                </a>
+            </div>
+        </div>
 
-<section class="tentang_kami py-5">
+        <div class="row align-items-center mb-5 g-4 text-lg-start text-center">
+            <div class="col-lg-6 order-2 order-lg-1 pe-lg-5">
+                <span class="d-inline-block fw-bold text-warning mb-2" style="letter-spacing: 2px; font-size: 0.85rem;">
+                    PROSES VERIFIKASI
+                </span>
+                <h3 class="fw-bold text-dark mb-3" style="font-size: 1.8rem; line-height: 1.3;">
+                    Pantau Status Nomor Antrian
+                </h3>
+                <p class="text-muted mb-4" style="font-size: 1rem; line-height: 1.7; text-align: justify;">
+                    Masukkan nomor antrian atau nomor berkas Anda pada kolom pencarian di bagian atas website untuk melihat sejauh mana perkembangan validasi pemetaan ruang dan dokumen teknis Anda oleh tim ahli Dinas.
+                </p>
+                <a href="#beranda" class="btn btn-secondary px-4 py-2 fw-semibold shadow-sm" style="border-radius: 8px;">
+                    Cek Berkas
+                </a>
+            </div>
+            <div class="col-lg-6 order-1 order-lg-2">
+                <div class="position-relative d-inline-block w-100">
+                    <img src="{{ asset('images/step2.png') }}" class="img-fluid custom-step-img" alt="Langkah 2" style="max-height: 480px !important; object-fit: contain !important; width: auto !important; margin: 0 auto; display: block;">
+                </div>
+            </div>
+        </div>
+
+        <div class="row align-items-center g-4 text-lg-start text-center">
+            <div class="col-lg-6 order-1">
+                <div class="position-relative d-inline-block w-100">
+                    <img src="{{ asset('images/step3.png') }}" class="img-fluid custom-step-img" alt="Langkah 3" style="max-height: 480px !important; object-fit: contain !important; width: auto !important; margin: 0 auto; display: block;">
+                </div>
+            </div>
+            <div class="col-lg-6 order-2 ps-lg-5">
+                <span class="d-inline-block fw-bold text-warning mb-2" style="letter-spacing: 2px; font-size: 0.85rem;">
+                    TAHAP AKHIR
+                </span>
+                <h3 class="fw-bold text-dark mb-3" style="font-size: 1.8rem; line-height: 1.3;">
+                    Pengambilan SK Perizinan
+                </h3>
+                <p class="text-muted mb-4" style="font-size: 1rem; line-height: 1.7; text-align: justify;">
+                    Setelah berkas dinyatakan lolos verifikasi kesesuaian tata ruang dan disetujui, Surat Keputusan (SK) resmi dapat langsung Anda ambil di loket pelayanan kantor Dinas Perizinan Kabupaten Sijunjung.
+                </p>
+                <a href="#tentang_kami" class="btn btn-secondary px-4 py-2 fw-semibold shadow-sm" style="border-radius: 8px;">
+                    Lihat Lokasi Kantor
+                </a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<section class="tentang_kami py-5" id="tentang_kami">
     <div class="container">
         <div class="row align-items-center justify-content-between g-4"> 
             
@@ -138,7 +215,7 @@
         </div>
     </div>
 </section>
-<section class="kontak_kami py-5 bg-white">
+<section class="kontak_kami py-5 bg-white" id="kontak">
     <div class="container">
         <div class="row mb-5">
             <div class="col-12 text-center">
@@ -229,7 +306,7 @@
             </div>
         </div>
     </footer>
-    
+    <script src="{{ asset('js/script.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   </body>
 </html>

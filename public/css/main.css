@@ -1,5 +1,6 @@
 body {
   font-family: 'Poppins', sans-serif;
+  padding-top: 70px;
 }
 
 .pl-150 {
@@ -232,10 +233,13 @@ body {
    NAVBAR (Menyesuaikan dengan Gambar Mockup Anda)
    ========================================================================== */
 .navbar {
-  box-shadow: 1px 8px 61px 0px rgba(22, 28, 51, 0.08);
-  -webkit-box-shadow: 1px 8px 61px 0px rgba(22, 28, 51, 0.08);
-  -moz-box-shadow: 1px 8px 61px 0px rgba(22, 28, 51, 0.08);
-  padding: 24px 0 24px 0;
+  position: fixed;   /* Membuat navbar melayang tetap di posisinya */
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;     /* Memastikan navbar selalu berada di lapisan paling atas */
+  background-color: #ffffff; /* Beri background agar konten di bawahnya tidak menembus saat di-scroll */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Opsional: memberi bayangan tipis */
 }
 
 .navbar .user-logged a {
@@ -264,4 +268,15 @@ body {
   height: 42px;
 }
 
+/* ==========================================================================
+   SECTION 
+   ========================================================================== */
 
+section {
+  scroll-margin-top: 70px; /* Sesuaikan dengan tinggi navbar Anda */
+}
+
+.navbar a.active {
+  color: #ffa500 !important; /* Warna orange sesuai desain Anda */
+  font-weight: bold;
+}
