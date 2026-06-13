@@ -112,7 +112,20 @@ body {
   .text-purple {
     color: #ef9d1a;
   }
-
+  
+  .btn-login {
+    background-color: #D97706;
+    border: none;
+    color: white;
+    padding: 8px 24px; /* Atas-bawah 8px (lebih tipis), Kiri-kanan 24px */
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background 0.2s ease-in-out;
+    
+    /* Tambahkan ini agar tombol bisa diatur posisinya */
+    display: block;
+    margin: 0 auto; /* Membuat tombol otomatis berada di tengah */
+}
 
 /* ==========================================================================
    TENTANG KAMI SECTION

@@ -35,7 +35,25 @@
                     </li>
                 </ul>
                 <div class="d-flex user-logged ms-2">
-                    <a class="btn btn-primary" href="#" role="button">Masuk</a>
+                    @auth
+                        <div class="dropdown">
+                            <button class="btn btn-warning dropdown-toggle fw-semibold" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                👋 {{ Auth::user()->username }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-menu-item dropdown-item" href="{{ route('dashboard') }}">Dashboard Admin</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item text-danger">Keluar / Logout</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    @else
+                        <a class="btn btn-primary btn-sm px-3 " href="{{ route('login') }}" role="button" style="background-color: #D97706; border: none;">Masuk</a>
+                    @endauth
                 </div>
             </div>
         </div>
