@@ -34,19 +34,20 @@
                         <a class="nav-link" href="#kontak">Kontak</a>
                     </li>
                 </ul>
-                <div class="d-flex user-logged ms-2">
+            </div>
+            <div class="d-flex user-logged ms-2">
                     @auth
                         <div class="dropdown">
-                            <button class="btn btn-warning dropdown-toggle fw-semibold" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="btn btn-warning btn-sm px-3 dropdown-toggle fw-semibold" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                                 👋 {{ Auth::user()->username }}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="dropdownMenuButton">
-                                <li><a class="dropdown-menu-item dropdown-item" href="{{ route('dashboard') }}">Dashboard Admin</a></li>
+                                <li><a class="dropdown-menu-item dropdown-item" href="{{ route('dashboard') }}">Dashboard</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST" class="d-inline">
                                         @csrf
-                                        <button type="submit" class="dropdown-item text-danger">Keluar / Logout</button>
+                                        <button type="submit" class="dropdown-item text-danger">Keluar</button>
                                     </form>
                                 </li>
                             </ul>
@@ -55,7 +56,6 @@
                         <a class="btn btn-primary btn-sm px-3 " href="{{ route('login') }}" role="button" style="background-color: #D97706; border: none;">Masuk</a>
                     @endauth
                 </div>
-            </div>
         </div>
     </nav>
 
@@ -318,7 +318,7 @@
                         &copy; 2026 Pemerintah Kabupaten Sijunjung. All Rights Reserved.
                     </p>
                     <small class="text-muted" style="font-size: 0.85rem;">
-                        Designed & Developed by <span class="text-warning fw-semibold">annovcoer</span>
+                        Designed & Developed by <span class="text-warning fw-semibold">Dream Build C</span>
                     </small>
                 </div>
             </div>

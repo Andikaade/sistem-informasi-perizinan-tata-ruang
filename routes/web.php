@@ -4,7 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LacakPerizinanController;
 use App\Http\Controllers\KontakController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
 
+// ==========================================
+// 1. HALAMAN UMUM (GUEST / PUBLIC)
+// ==========================================
 
 // Halaman Utama (Pencarian / Tracking)
 Route::get('/', [LacakPerizinanController::class, 'index'])->name('antrian.index');
@@ -13,21 +17,23 @@ Route::post('/cari', [LacakPerizinanController::class, 'cari'])->name('antrian.c
 // Kirim Email / Kontak
 Route::post('/kontak-kirim', [KontakController::class, 'kirimPesan'])->name('kontak.kirim');
 
-// [Grup 1] Jalur untuk user yang BELUM Login (Guest)
+
+// ==========================================
+// 2. JALUR KHUSUS USER BELUM LOGIN (GUEST)
+// ==========================================
 Route::middleware('guest')->group(function () {
-    // Berikan ->name('login') di method GET agar dikenali oleh route('login')
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
 });
 
 
-// [Grup 2] Jalur untuk user yang SUDAH Login (Authenticated)
+// ==========================================
+// 3. JALUR KHUSUS USER SUDAH LOGIN (AUTH)
+// ==========================================
 Route::middleware('auth')->group(function () {
     
-    // Halaman Dashboard Utama
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    // Halaman Dashboard Utama (Memanggil Controller)
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Jalur untuk Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
