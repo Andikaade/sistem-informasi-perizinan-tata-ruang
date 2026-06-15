@@ -1,3 +1,5 @@
+// public/js/dashboard.js
+
 document.addEventListener("DOMContentLoaded", function () {
     // 1. Inisialisasi Tooltip
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -24,7 +26,29 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // 4. Filter Tabel
+    // 4. Event Listener untuk Tombol Lihat Detail (PERBAIKAN: Sekarang aman di dalam DOMContentLoaded)
+    document.querySelectorAll('.btn-detail-data').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Ambil data dari atribut tombol
+            const nama = this.getAttribute('data-nama');
+            const surat = this.getAttribute('data-surat');
+            const status = this.getAttribute('data-status');
+
+            // Isi ke modal (Gunakan textContent untuk tag <td> / <span>)
+            document.getElementById('detail_nama_pemohon').textContent = nama;
+            document.getElementById('detail_no_surat').textContent = surat;
+            document.getElementById('detail_status').textContent = status;
+
+            // Buka modal secara paksa
+            const modalElement = document.getElementById('detailDataModal');
+            if (modalElement) {
+                const myModal = new bootstrap.Modal(modalElement);
+                myModal.show();
+            }
+        });
+    });
+
+    // 5. Filter Tabel
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
     const table = document.getElementById('perizinanTable');
@@ -54,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-// Fungsi untuk konfirmasi hapus (tetap pakai window)
+// Fungsi untuk konfirmasi hapus (tetap di luar / pakai objek window)
 window.konfirmasiHapus = function(event) {
     if (!confirm("Apakah Anda yakin ingin menghapus data perizinan ini?")) {
         event.preventDefault(); 

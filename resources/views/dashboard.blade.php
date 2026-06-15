@@ -97,9 +97,14 @@
                                     <span class="badge {{ $badgeColor }}">{{ ucfirst($row[3] ?? 'Pending') }}</span>
                                 </td>
                                <td class="text-nowrap">
-                                    <a href="#" class="btn btn-sm btn-info text-white" data-bs-toggle="tooltip" title="Lihat Detail">
+                                    <button type="button" 
+                                            class="btn btn-sm btn-info text-white btn-detail-data" 
+                                            data-id="{{ $index }}" 
+                                            data-nama="{{ $row[1] ?? '-' }}" 
+                                            data-surat="{{ $row[2] ?? '-' }}" 
+                                            data-status="{{ $row[3] ?? '-' }}">
                                         <i class="fas fa-eye"></i>
-                                    </a>
+                                    </button>
 
                                     <button type="button" class="btn btn-sm btn-warning text-white btn-update-status" 
                                             data-bs-toggle="modal" data-bs-target="#updateStatusModal" 
@@ -202,6 +207,40 @@
                         <button type="submit" class="btn btn-success btn-sm px-3">Simpan Perubahan</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="detailDataModal" tabindex="-1" aria-labelledby="detailDataModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailDataModalLabel"><i class="fas fa-eye me-2 text-info"></i>Detail Pengajuan Perizinan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered table-striped m-0">
+                        <tr>
+                            <th style="width: 30%;">ID Antrian</th>
+                            <td id="detail_row_index">-</td>
+                        </tr>
+                        <tr>
+                            <th>Nama Pemohon</th>
+                            <td id="detail_nama_pemohon">-</td>
+                        </tr>
+                        <tr>
+                            <th>No. Surat</th>
+                            <td id="detail_no_surat">-</td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td id="detail_status">-</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
             </div>
         </div>
     </div>
