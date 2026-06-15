@@ -32,9 +32,13 @@ Route::middleware('guest')->group(function () {
 // ==========================================
 Route::middleware('auth')->group(function () {
     
-    // Halaman Dashboard Utama (Memanggil Controller)
+    // Halaman Dashboard Utama 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Update statu perizinan
+    Route::put('/dashboard/update-status', [DashboardController::class, 'updateStatus'])->name('perizinan.update-status');
     
     // Jalur untuk Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
+

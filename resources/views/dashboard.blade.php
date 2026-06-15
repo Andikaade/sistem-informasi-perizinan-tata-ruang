@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Dashboard Admin | Petaru</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
 </head>
 <body class="bg-light">
 
@@ -40,6 +41,12 @@
             <span class="badge bg-success px-3 py-2 rounded-pill">
                 Administrator Aktif
             </span>
+            @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show small py-2" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            @endif
         </div>
 
         <div class="card p-4 shadow-sm">
@@ -89,7 +96,16 @@
                                 </td>
                                 <td>
                                     <a href="#" class="btn btn-sm btn-info text-white">Lihat</a>
-                                    <a href="#" class="btn btn-sm btn-warning text-white">Edit</a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-warning text-white btn-edit-status" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#updateStatusModal"
+                                            data-id="{{ $index }}" 
+                                            data-nama="{{ $row[1] ?? '-' }}" 
+                                            data-surat="{{ $row[2] ?? '-' }}" 
+                                            data-status="{{ strtolower($row[3] ?? '') }}">
+                                        Edit
+                                    </button>
                                     <a href="#" class="btn btn-sm btn-danger">Hapus</a>
                                 </td>
                             </tr>
@@ -103,7 +119,49 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="updateStatusModalLabel">Update Status Perizinan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form action="{{ route('perizinan.update-status') }}" method="POST">
+                @csrf
+                @method('PUT')
+                
+                <div class="modal-body">
+                    <input type="hidden" name="row_index" id="modal_row_index">
 
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">Nama Pemohon</label>
+                        <input type="text" id="modal_nama_pemohon" class="form-control bg-light" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">No Surat</label>
+                        <input type="text" id="modal_no_surat" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal_status" class="form-label fw-semibold">Pilih Status Baru</label>
+                        <select name="status" id="modal_status" class="form-select" required>
+                            <option value="selesai">Selesai</option>
+                            <option value="dalam proses">Dalam Proses</option>
+                            <option value="dikembalikan">Dikembalikan</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-3">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const searchInput = document.getElementById('searchInput');
         const statusFilter = document.getElementById('statusFilter');
@@ -141,6 +199,24 @@
 
         searchInput.addEventListener('keyup', filterTable);
         statusFilter.addEventListener('change', filterTable);
+        // LOGIKA MENANGKAP DATA EDIT KE MODAL
+        const editButtons = document.querySelectorAll('.btn-edit-status');
+
+        editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+        // Ambil data dari atribut 
+        const rowIndex = this.getAttribute('data-id');
+        const namaPemohon = this.getAttribute('data-nama');
+        const noSurat = this.getAttribute('data-surat'); // Ambil data-surat
+        const currentStatus = this.getAttribute('data-status');
+
+        // Isi elemen input di dalam modal
+        document.getElementById('modal_row_index').value = rowIndex;
+        document.getElementById('modal_nama_pemohon').value = namaPemohon;
+        document.getElementById('modal_no_surat').value = noSurat; // Masukkan ke input modal
+        document.getElementById('modal_status').value = currentStatus;
+    });
+});
     </script>
 </body>
 </html>
