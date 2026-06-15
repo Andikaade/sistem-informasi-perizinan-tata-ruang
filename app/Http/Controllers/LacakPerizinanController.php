@@ -49,9 +49,9 @@ class LacakPerizinanController extends Controller
             $hasilCari = null;
 
             foreach ($rows as $index => $row) {
-                if ($index === 0) continue; // Lewati baris header
+                if ($index === 0) continue;
 
-                // SEKARANG KITA TARGETKAN KOLOM A (INDEX 0) SEBAGAI NO_ANTRIAN
+                //KOLOM A (INDEX 0) SEBAGAI NO_ANTRIAN
                 $noAntrianDiSheets = $row[0] ?? ''; 
 
                 if (trim($noAntrianDiSheets) === $keyword) {
