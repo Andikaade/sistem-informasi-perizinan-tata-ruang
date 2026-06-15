@@ -2,15 +2,15 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin | Petaru</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="bg-light">
 
-   <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm w-100">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm w-100">
         <div class="container py-2 d-flex justify-content-between align-items-center">
-            
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="{{ asset('images/logo.png') }}" alt="Logo" height="40" class="me-2">
                 <span class="mb-0 h5 fw-semibold text-dark">Pemerintahan Kab. Sijunjung</span>
@@ -18,7 +18,6 @@
             
             <div class="d-flex align-items-center gap-3">
                 <a href="#" class="btn btn-dark btn-sm fw-medium px-2">Manajemen User</a>
-                
                 <form action="{{ route('logout') }}" method="POST" class="m-0">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-danger px-3 rounded-2 fw-medium">
@@ -26,7 +25,6 @@
                     </button>
                 </form>
             </div> 
-
         </div>
     </nav>
 
@@ -38,15 +36,19 @@
                     {{ Auth::user()->name ?? Auth::user()->username }}
                 </h5>
             </div>
-            <span class="badge bg-success px-3 py-2 rounded-pill">
-                Administrator Aktif
-            </span>
-            @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show small py-2" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div>
+                @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show small py-1 mb-0" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                @endif
             </div>
-            @endif
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success px-3 py-2 rounded-pill">
+                    Administrator Aktif
+                </span>
+            </div>
         </div>
 
         <div class="card p-4 shadow-sm">
@@ -75,7 +77,7 @@
                             <th>Nama Pemohon</th>
                             <th>No Surat</th>
                             <th>Status</th>
-                            <th width="20%">Aksi</th>
+                            <th width="20%" class="text-center"><i class="fas fa-cog me-1"></i></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -94,19 +96,35 @@
                                     @endphp
                                     <span class="badge {{ $badgeColor }}">{{ ucfirst($row[3] ?? 'Pending') }}</span>
                                 </td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-info text-white">Lihat</a>
-                                    <button type="button" 
-                                            class="btn btn-sm btn-warning text-white btn-edit-status" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#updateStatusModal"
+                               <td class="text-nowrap">
+                                    <a href="#" class="btn btn-sm btn-info text-white" data-bs-toggle="tooltip" title="Lihat Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    <button type="button" class="btn btn-sm btn-warning text-white btn-update-status" 
+                                            data-bs-toggle="modal" data-bs-target="#updateStatusModal" 
                                             data-id="{{ $index }}" 
                                             data-nama="{{ $row[1] ?? '-' }}" 
                                             data-surat="{{ $row[2] ?? '-' }}" 
                                             data-status="{{ strtolower($row[3] ?? '') }}">
-                                        Edit
+                                        <i class="fas fa-sync-alt"></i>
                                     </button>
-                                    <a href="#" class="btn btn-sm btn-danger">Hapus</a>
+
+                                    <button type="button" class="btn btn-sm btn-primary btn-edit-data" 
+                                            data-bs-toggle="modal" data-bs-target="#editDataModal" 
+                                            data-id="{{ $index }}" 
+                                            data-nama="{{ $row[1] ?? '-' }}" 
+                                            data-surat="{{ $row[2] ?? '-' }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    <form action="{{ route('perizinan.destroy', $index) }}" method="POST" class="d-inline m-0" onsubmit="return window.konfirmasiHapus(event)">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Hapus Data">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty
@@ -119,104 +137,76 @@
             </div>
         </div>
     </div>
+
     <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="updateStatusModalLabel">Update Status Perizinan</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="updateStatusModalLabel">Update Status Perizinan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('perizinan.update-status') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <input type="hidden" name="row_index" id="modal_row_index">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted">Nama Pemohon</label>
+                            <input type="text" id="modal_nama_pemohon" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted">No Surat</label>
+                            <input type="text" id="modal_no_surat" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Pilih Status Baru</label>
+                            <select name="status" id="modal_status" class="form-select" required>
+                                <option value="selesai">Selesai</option>
+                                <option value="dalam proses">Dalam Proses</option>
+                                <option value="dikembalikan">Dikembalikan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-3">Simpan Perubahan</button>
+                    </div>
+                </form>
             </div>
-            
-            <form action="{{ route('perizinan.update-status') }}" method="POST">
-                @csrf
-                @method('PUT')
-                
-                <div class="modal-body">
-                    <input type="hidden" name="row_index" id="modal_row_index">
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-muted">Nama Pemohon</label>
-                        <input type="text" id="modal_nama_pemohon" class="form-control bg-light" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-muted">No Surat</label>
-                        <input type="text" id="modal_no_surat" class="form-control bg-light" readonly>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="modal_status" class="form-label fw-semibold">Pilih Status Baru</label>
-                        <select name="status" id="modal_status" class="form-select" required>
-                            <option value="selesai">Selesai</option>
-                            <option value="dalam proses">Dalam Proses</option>
-                            <option value="dikembalikan">Dikembalikan</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-3">Simpan Perubahan</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const searchInput = document.getElementById('searchInput');
-        const statusFilter = document.getElementById('statusFilter');
-        const table = document.getElementById('perizinanTable');
-        const tr = table.getElementsByTagName('tr');
 
-        function filterTable() {
-            const textKeyword = searchInput.value.toLowerCase().trim();
-            const selectedStatus = statusFilter.value.toLowerCase().trim();
+    <div class="modal fade" id="editDataModal" tabindex="-1" aria-labelledby="editDataModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="editDataModalLabel">Edit Data Perizinan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('perizinan.update-data') }}" method="POST">
+                    @csrf 
+                    @method('PUT')
+                    <div class="modal-body">
+                        <input type="hidden" name="row_index" id="edit_row_index">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nama Pemohon</label>
+                            <input type="text" name="nama" id="edit_nama" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">No Surat</label>
+                            <input type="text" name="no_surat" id="edit_no_surat" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success btn-sm px-3">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-            for (var i = 1; i < tr.length; i++) {
-                var tds = tr[i].getElementsByTagName('td');
-                
-                if (tds.length < 5) continue;
-
-                var antrianText = (tds[0].textContent || tds[0].innerText).toLowerCase();
-                var namaText    = (tds[1].textContent || tds[1].innerText).toLowerCase();
-                var suratText   = (tds[2].textContent || tds[2].innerText).toLowerCase();
-                var statusText  = (tds[3].textContent || tds[3].innerText).toLowerCase();
-
-                const matchesText = textKeyword === "" || 
-                                    antrianText.indexOf(textKeyword) > -1 || 
-                                    namaText.indexOf(textKeyword) > -1 || 
-                                    suratText.indexOf(textKeyword) > -1;
-
-                const matchesStatus = selectedStatus === "" || statusText.indexOf(selectedStatus) > -1;
-
-                if (matchesText && matchesStatus) {
-                    tr[i].style.display = "";
-                } else {
-                    tr[i].style.display = "none";
-                }
-            }
-        }
-
-        searchInput.addEventListener('keyup', filterTable);
-        statusFilter.addEventListener('change', filterTable);
-        // LOGIKA MENANGKAP DATA EDIT KE MODAL
-        const editButtons = document.querySelectorAll('.btn-edit-status');
-
-        editButtons.forEach(button => {
-        button.addEventListener('click', function() {
-        // Ambil data dari atribut 
-        const rowIndex = this.getAttribute('data-id');
-        const namaPemohon = this.getAttribute('data-nama');
-        const noSurat = this.getAttribute('data-surat'); // Ambil data-surat
-        const currentStatus = this.getAttribute('data-status');
-
-        // Isi elemen input di dalam modal
-        document.getElementById('modal_row_index').value = rowIndex;
-        document.getElementById('modal_nama_pemohon').value = namaPemohon;
-        document.getElementById('modal_no_surat').value = noSurat; // Masukkan ke input modal
-        document.getElementById('modal_status').value = currentStatus;
-    });
-});
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('js/dashboard.js') }}"></script>
 </body>
 </html>

@@ -5,88 +5,168 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Google\Client;
 use Google\Service\Sheets;
+use Google\Service\Sheets\BatchUpdateSpreadsheetRequest;
 
 class DashboardController extends Controller
 {
-    public function index()
+    private $spreadsheetId = '1zY1TCWEoHDW24uWVm7fQ-i07QySyBPmJzno6CE7mOUs';
+
+    /**
+     * Helper untuk inisialisasi Google Sheets Service secara efisien
+     */
+    private function getGoogleSheetsService()
     {
-        // 1. Inisialisasi Google Client
         $client = new Client();
         $client->setApplicationName('Tracking Perizinan');
-        $client->setScopes([Sheets::SPREADSHEETS_READONLY]);
+        $client->setScopes([Sheets::SPREADSHEETS]);
         $client->setAuthConfig(storage_path('app/google-sheets/credentials.json'));
 
-        // 2. Inisialisasi Layanan Google Sheets
-        $service = new Sheets($client);
-        
-        $spreadsheetId = '1zY1TCWEoHDW24uWVm7fQ-i07QySyBPmJzno6CE7mOUs'; 
+        return new Sheets($client);
+    }
+
+    public function index()
+    {
+        $service = $this->getGoogleSheetsService();
         $range = 'Sheet1!A2:D'; 
 
-        
         try {
-            $response = $service->spreadsheets_values->get($spreadsheetId, $range);
+            $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
             $rows = $response->getValues();
         } catch (\Exception $e) {
-            // Jika gagal atau error, set $rows sebagai array kosong agar tidak crash
             $rows = [];
         }
                
-        // 3. Kirim data ke view dengan nama 'perizinanData' dan 'adminName'
         return view('dashboard', [
             'perizinanData' => $rows ?? [],
-            'adminName' => auth()->user()->name ?? 'Admin' // Mengambil nama user login
+            'adminName' => auth()->user()->name ?? 'Admin'
         ]);
     } 
+
     public function updateStatus(Request $request)
-{
-    $request->validate([
-        'row_index' => 'required|integer',
-        'status' => 'required|string'
-    ]);
-
-    $rowIndex = $request->input('row_index');
-    
-    // Indeks tabel HTML mulai dari 0, sedangkan baris data pertama di spreadsheet 
-    // biasanya berada di baris ke-2 (karena baris 1 digunakan untuk judul/header kolom).
-    $spreadsheetRow = $rowIndex + 2; 
-
-    // Ubah teks status agar memiliki huruf kapital di awal (misal: "selesai" -> "Selesai")
-    $newStatus = ucfirst($request->input('status')); 
-
-    try {
-        // 1. Panggil konfigurasi service Google Client yang sudah kamu buat sebelumnya
-        $client = new \Google\Client();
-        $client->setAuthConfig(storage_path('app/google-sheets/credentials.json'));
-        $client->addScope(\Google\Service\Sheets::SPREADSHEETS);
-        
-        $service = new \Google\Service\Sheets($client);
-        
-        // 2. ID Spreadsheet kamu (Silakan ganti dengan ID spreadsheet nyata milikmu)
-        $spreadsheetId = '1zY1TCWEoHDW24uWVm7fQ-i07QySyBPmJzno6CE7mOUs'; 
-        
-        // 3. Tentukan koordinat kolom tempat Status berada.
-        // Jika Status berada di kolom ke-4, maka koordinatnya adalah Kolom D (D + nomor baris)
-        $range = "Sheet1!D" . $spreadsheetRow; 
-
-        // 4. Bungkus nilai baru ke dalam objek ValueRange Google API
-        $body = new \Google\Service\Sheets\ValueRange([
-            'values' => [[$newStatus]]
+    {
+        $request->validate([
+            'row_index' => 'required|integer',
+            'status' => 'required|string'
         ]);
 
-        // 5. Eksekusi perintah update ke Google Sheets server
-        $service->spreadsheets_values->update(
-            $spreadsheetId, 
-            $range, 
-            $body, 
-            ['valueInputOption' => 'RAW']
-        );
+        $rowIndex = $request->input('row_index');
+        $spreadsheetRow = $rowIndex + 2; 
+        $newStatus = ucfirst($request->input('status')); 
 
-        // Jika berhasil, kembalikan ke halaman dengan membawa session alert sukses
-        return redirect()->route('dashboard')->with('success', 'Status perizinan berhasil diperbarui langsung ke Google Sheets!');
+        try {
+            $service = $this->getGoogleSheetsService();
+            $range = "Sheet1!D" . $spreadsheetRow; 
 
-    } catch (\Exception $e) {
-        // Jika ada masalah koneksi/kredensial API, tangkap errornya agar tidak blank
-        return redirect()->back()->with('error', 'Gagal memperbarui status: ' . $e->getMessage());
+            $body = new \Google\Service\Sheets\ValueRange([
+                'values' => [[$newStatus]]
+            ]);
+
+            $service->spreadsheets_values->update(
+                $this->spreadsheetId, 
+                $range, 
+                $body, 
+                ['valueInputOption' => 'RAW']
+            );
+
+            return redirect()->route('dashboard')->with('success', 'Status perizinan berhasil diperbarui langsung ke Google Sheets!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui status: ' . $e->getMessage());
+        }
+    }
+
+    public function updateData(Request $request)
+    {
+        $request->validate([
+            'row_index' => 'required|integer',
+            'nama' => 'required|string',
+            'no_surat' => 'required|string',
+        ]);
+
+        $rowIndex = $request->input('row_index');
+        $spreadsheetRow = $rowIndex + 2; 
+
+        try {
+            $service = $this->getGoogleSheetsService();
+            $range = "Sheet1!B" . $spreadsheetRow . ":C" . $spreadsheetRow; 
+
+            $body = new \Google\Service\Sheets\ValueRange([
+                'values' => [[
+                    $request->input('nama'),
+                    $request->input('no_surat')
+                ]]
+            ]);
+
+            $service->spreadsheets_values->update(
+                $this->spreadsheetId, 
+                $range, 
+                $body, 
+                ['valueInputOption' => 'RAW']
+            );
+
+            return redirect()->route('dashboard')->with('success', 'Data administrasi pemohon berhasil diperbarui di Google Sheets!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy($index)
+    {
+        try {
+            // 1. Inisialisasi Google Client secara langsung di dalam method
+            $client = new \Google\Client();
+            $client->setApplicationName('Tracking Perizinan');
+            $client->setScopes([\Google\Service\Sheets::SPREADSHEETS]);
+            $client->setAuthConfig(storage_path('app/google-sheets/credentials.json'));
+
+            // 2. Inisialisasi Layanan Google Sheets
+            $service = new \Google\Service\Sheets($client);
+            
+            // Gunakan string ID Spreadsheet Anda langsung secara benar
+            $spreadsheetId = '1zY1TCWEoHDW24uWVm7fQ-i07QySyBPmJzno6CE7mOUs'; 
+            $sheetName = 'Sheet1'; 
+
+            // 3. Mengambil metadata spreadsheet untuk mendapatkan sheetId numerik
+            $spreadsheet = $service->spreadsheets->get($spreadsheetId);
+            $sheetId = null;
+            foreach ($spreadsheet->getSheets() as $sheet) {
+                if ($sheet->getProperties()->getTitle() === $sheetName) {
+                    $sheetId = $sheet->getProperties()->getSheetId();
+                    break;
+                }
+            }
+
+            if (is_null($sheetId)) {
+                return redirect()->back()->with('error', "Sheet dengan nama '{$sheetName}' tidak ditemukan.");
+            }
+
+            // 4. Hitung posisi indeks asli baris di Google Sheets API
+            // Jika $index dari tabel adalah 0 (baris pertama setelah header), 
+            // maka di API Google, indeks baris data pertama tersebut berada di baris indeks 1.
+            $realRowIndex = (int)$index + 1; 
+
+            // 5. Susun Request Batch Update untuk menghapus baris secara fisik
+            $requestBody = new \Google\Service\Sheets\BatchUpdateSpreadsheetRequest([
+                'requests' => [
+                    'deleteDimension' => [
+                        'range' => [
+                            'sheetId'    => $sheetId,
+                            'dimension'  => 'ROWS',
+                            'startIndex' => $realRowIndex,     // Baris awal yang dihapus (inklusif)
+                            'endIndex'   => $realRowIndex + 1  // Batas akhir hapus (eksklusif)
+                        ]
+                    ]
+                ]
+            ]);
+
+            // 6. Eksekusi penghapusan ke Google Sheets API
+            $service->spreadsheets->batchUpdate($spreadsheetId, $requestBody);
+
+            return redirect()->route('dashboard')->with('success', 'Data perizinan berhasil dihapus dari Google Sheets!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
     }
 }
-} 

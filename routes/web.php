@@ -35,8 +35,10 @@ Route::middleware('auth')->group(function () {
     // Halaman Dashboard Utama 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Update statu perizinan
+    // Update status perizinan
     Route::put('/dashboard/update-status', [DashboardController::class, 'updateStatus'])->name('perizinan.update-status');
+    Route::put('/dashboard/update-data', [DashboardController::class, 'updateData'])->name('perizinan.update-data');
+    Route::delete('/perizinan/{index}', [DashboardController::class, 'destroy'])->name('perizinan.destroy');
     
     // Jalur untuk Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
