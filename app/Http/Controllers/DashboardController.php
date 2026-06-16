@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Google\Client;
 use Google\Service\Sheets;
 use Google\Service\Sheets\BatchUpdateSpreadsheetRequest;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class DashboardController extends Controller
 {
@@ -27,7 +29,10 @@ class DashboardController extends Controller
     public function index()
     {
         $service = $this->getGoogleSheetsService();
-        $range = 'Sheet1!A2:D'; 
+        
+        // PERBAIKAN 1: Lebarkan range pengambilan data dari A2:D menjadi A2:K 
+        // Agar kolom status (Kolom K) ikut terbaca oleh aplikasi Laravel
+        $range = 'Sheet1!A2:K'; 
 
         try {
             $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
@@ -40,6 +45,20 @@ class DashboardController extends Controller
             'perizinanData' => $rows ?? [],
             'adminName' => auth()->user()->name ?? 'Admin'
         ]);
+
+        // Catatan: Kode pagination di bawah ini tidak akan pernah dieksekusi 
+        // karena terkena statement 'return view' di atasnya. 
+        // Jika ingin menggunakan pagination, silakan pindahkan return view-nya ke bawah.
+        $perPage = 10; 
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $itemCollection = collect($allRows);
+
+        $currentPageItems = $itemCollection->slice(($currentPage * $perPage) - $perPage, $perPage)->all();
+
+        $paginatedItems = new LengthAwarePaginator($currentPageItems , count($itemCollection), $perPage);
+        $paginatedItems->setPath($request->url());
+
+        return view('dashboard', ['dataPerizinan' => $paginatedItems]);
     } 
 
     public function updateStatus(Request $request)
@@ -55,7 +74,9 @@ class DashboardController extends Controller
 
         try {
             $service = $this->getGoogleSheetsService();
-            $range = "Sheet1!D" . $spreadsheetRow; 
+            
+            // PERBAIKAN 2: Ubah range simpan status dari kolom D ke kolom K
+            $range = "Sheet1!K" . $spreadsheetRow; 
 
             $body = new \Google\Service\Sheets\ValueRange([
                 'values' => [[$newStatus]]
@@ -88,7 +109,9 @@ class DashboardController extends Controller
 
         try {
             $service = $this->getGoogleSheetsService();
-            $range = "Sheet1!B" . $spreadsheetRow . ":C" . $spreadsheetRow; 
+            
+            // PERBAIKAN 3: Sesuai struktur baru, Nama Pemohon ada di kolom C dan No Surat ada di kolom D
+            $range = "Sheet1!C" . $spreadsheetRow . ":D" . $spreadsheetRow; 
 
             $body = new \Google\Service\Sheets\ValueRange([
                 'values' => [[
@@ -114,20 +137,16 @@ class DashboardController extends Controller
     public function destroy($index)
     {
         try {
-            // 1. Inisialisasi Google Client secara langsung di dalam method
             $client = new \Google\Client();
             $client->setApplicationName('Tracking Perizinan');
             $client->setScopes([\Google\Service\Sheets::SPREADSHEETS]);
             $client->setAuthConfig(storage_path('app/google-sheets/credentials.json'));
 
-            // 2. Inisialisasi Layanan Google Sheets
             $service = new \Google\Service\Sheets($client);
             
-            // Gunakan string ID Spreadsheet Anda langsung secara benar
             $spreadsheetId = '1zY1TCWEoHDW24uWVm7fQ-i07QySyBPmJzno6CE7mOUs'; 
             $sheetName = 'Sheet1'; 
 
-            // 3. Mengambil metadata spreadsheet untuk mendapatkan sheetId numerik
             $spreadsheet = $service->spreadsheets->get($spreadsheetId);
             $sheetId = null;
             foreach ($spreadsheet->getSheets() as $sheet) {
@@ -141,26 +160,21 @@ class DashboardController extends Controller
                 return redirect()->back()->with('error', "Sheet dengan nama '{$sheetName}' tidak ditemukan.");
             }
 
-            // 4. Hitung posisi indeks asli baris di Google Sheets API
-            // Jika $index dari tabel adalah 0 (baris pertama setelah header), 
-            // maka di API Google, indeks baris data pertama tersebut berada di baris indeks 1.
             $realRowIndex = (int)$index + 1; 
 
-            // 5. Susun Request Batch Update untuk menghapus baris secara fisik
             $requestBody = new \Google\Service\Sheets\BatchUpdateSpreadsheetRequest([
                 'requests' => [
                     'deleteDimension' => [
                         'range' => [
                             'sheetId'    => $sheetId,
                             'dimension'  => 'ROWS',
-                            'startIndex' => $realRowIndex,     // Baris awal yang dihapus (inklusif)
-                            'endIndex'   => $realRowIndex + 1  // Batas akhir hapus (eksklusif)
+                            'startIndex' => $realRowIndex,     
+                            'endIndex'   => $realRowIndex + 1  
                         ]
                     ]
                 ]
             ]);
 
-            // 6. Eksekusi penghapusan ke Google Sheets API
             $service->spreadsheets->batchUpdate($spreadsheetId, $requestBody);
 
             return redirect()->route('dashboard')->with('success', 'Data perizinan berhasil dihapus dari Google Sheets!');

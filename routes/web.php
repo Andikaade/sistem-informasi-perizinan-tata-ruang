@@ -5,6 +5,7 @@ use App\Http\Controllers\LacakPerizinanController;
 use App\Http\Controllers\KontakController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use Illuminate\Support\Facades\Schedule;
 
 // ==========================================
 // 1. HALAMAN UMUM (GUEST / PUBLIC)
@@ -43,4 +44,6 @@ Route::middleware('auth')->group(function () {
     // Jalur untuk Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
+
+Schedule::command('app:auto-delete-old-perizinan')->daily();
 
