@@ -1,6 +1,88 @@
 // public/js/dashboard.js
 
+// =========================================================================
+// HELPER FUNCTION: Mengubah SEGALA FORMAT tanggal dari aplikasi ke Indo
+// =========================================================================
+function formatTanggalIndonesia(dateString) {
+    if (!dateString || dateString.trim() === '-' || dateString.trim() === '') return '-';
+    
+    const bulanIndo = {
+        'jan': 'Januari', 'feb': 'Februari', 'mar': 'Maret', 'apr': 'April',
+        'may': 'Mei', 'jun': 'Juni', 'jul': 'Juli', 'aug': 'Agustus',
+        'sep': 'September', 'oct': 'Oktober', 'nov': 'November', 'dec': 'Desember'
+    };
+
+    let cleanString = dateString.trim();
+
+    // Skenario 1: Jika format berisi tanda miring (Hasil dari updateData / Edit -> Contoh: 18/06/2026 10:15)
+    if (cleanString.includes('/')) {
+        const parts = cleanString.split(' '); 
+        const dateParts = parts[0].split('/');
+        
+        if (dateParts.length === 3) {
+            const tgl = dateParts[0];
+            const namaBulan = [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ][parseInt(dateParts[1]) - 1];
+            const thn = dateParts[2];
+            const jam = parts[1] ? ' ' + parts[1] : ''; // Pertahankan jam menit log edit
+            
+            return `${tgl} ${namaBulan} ${thn}${jam}`;
+        }
+    }
+
+    // Skenario 2: Jika format berisi tanda strip text (Hasil dari alur utama -> Contoh: 17-Jun-2026)
+    if (cleanString.includes('-')) {
+        const parts = cleanString.split(' ');
+        const datePart = parts[0];
+        const timePart = parts[1] || '';
+
+        const dateSplit = datePart.split('-');
+        if (dateSplit.length === 3) {
+            const tgl = dateSplit[0];
+            const blnRaw = dateSplit[1].toLowerCase();
+            const thn = dateSplit[2];
+            
+            const namaBulan = bulanIndo[blnRaw] || dateSplit[1]; 
+            const jam = timePart ? ' ' + timePart : '';
+            
+            return `${tgl} ${namaBulan} ${thn}${jam}`;
+        }
+    }
+
+    return dateString;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+    // Variable Global untuk validasi Captcha Matematika Sederhana
+    let angkaUtama1 = 0;
+    let angkaUtama2 = 0;
+    let hasilKunciCaptcha = 0;
+
+    function buatCaptchaBaru() {
+        angkaUtama1 = Math.floor(Math.random() * 10) + 1; // Angka acak 1 - 10
+        angkaUtama2 = Math.floor(Math.random() * 10) + 1; // Angka acak 1 - 10
+        hasilKunciCaptcha = angkaUtama1 + angkaUtama2;
+        
+        const elCaptchaText = document.getElementById('captcha_text');
+        if (elCaptchaText) {
+            elCaptchaText.textContent = `${angkaUtama1} + ${angkaUtama2}`;
+        }
+        
+        const elInputCaptcha = document.getElementById('edit_captcha_input');
+        if (elInputCaptcha) elInputCaptcha.value = '';
+        
+        const elErrorMsg = document.getElementById('captcha_error_msg');
+        if (elErrorMsg) elErrorMsg.classList.add('data-none', 'd-none');
+    }
+
+    // Refresh captcha manual lewat tombol reload
+    const btnRefresh = document.getElementById('btn_refresh_captcha');
+    if (btnRefresh) {
+        btnRefresh.addEventListener('click', buatCaptchaBaru);
+    }
+
     // 1. Inisialisasi Tooltip Bootstrap (Bawaan)
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -8,33 +90,36 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // =========================================================================
-    // EVENT DELEGATION: Mengamankan tombol Detail, Update Status, dan Edit
+    // EVENT DELEGATION: Deteksi Klik Tombol Aksi di Tabel
     // =========================================================================
     document.addEventListener('click', function (event) {
-        // Deteksi tombol atau icon bagian dalam tombol yang sedang diklik
-        const btnDetail = event.target.closest('.btn-detail-data');
-        const btnUpdate = event.target.closest('.btn-update-status');
-        const btnEdit   = event.target.closest('.btn-edit-data');
-
+        
         // ---------------------------------------------------------------------
         // A. KONDISI: TOMBOL LIHAT DETAIL DIKLIK
         // ---------------------------------------------------------------------
-        if (btnDetail) {
+        const btnDetail = event.target.closest('.btn-detail-data') || event.target.closest('[data-antrian]:not([data-index])');
+        
+        if (btnDetail && !btnDetail.hasAttribute('data-index') && btnDetail.hasAttribute('data-antrian')) {
             event.preventDefault();
 
-            // Mengambil data dari atribut HTML dengan fallback tanda strip (-) jika kosong
             const antrian      = btnDetail.getAttribute('data-antrian') || '-';
             const nama         = btnDetail.getAttribute('data-nama') || '-';
             const surat        = btnDetail.getAttribute('data-surat') || '-';
             const deskripsi    = btnDetail.getAttribute('data-deskripsi') || '-';
             const phone        = btnDetail.getAttribute('data-phone') || '-';
             const alamat       = btnDetail.getAttribute('data-alamat') || '-';
-            const tglPengajuan = btnDetail.getAttribute('data-tgl-pengajuan') || '-';
-            const tglProses    = btnDetail.getAttribute('data-tgl-proses') || '-';
-            const tglSelesai   = btnDetail.getAttribute('data-tgl-selesai') || '-';
             const statusText   = btnDetail.getAttribute('data-status') || 'Pending';
+            
+            // Format Alur Alur Utama berkas
+            const tglPengajuan = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-pengajuan'));
+            const tglProses    = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-proses'));
+            const tglSelesai   = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-selesai'));
+            
+            // Log Perubahan Data (Hanya terisi jika berkas pernah di-edit lewat updateData)
+            const createdBy    = btnDetail.getAttribute('data-created-by') || '-';
+            const tglUpdate    = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-update'));
+            const updatedBy    = btnDetail.getAttribute('data-updated-by') || '-';
 
-            // Pemetaan ID Elemen Modal sesuai dengan struktur tabel HTML Blade Anda
             const elements = {
                 'detail_no_antrian': antrian,
                 'detail_nama_pemohon': nama,
@@ -44,10 +129,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 'detail_alamat': alamat,
                 'detail_tgl_pengajuan': tglPengajuan,
                 'detail_tgl_proses': tglProses,
-                'detail_tgl_selesai': tglSelesai
+                'detail_tgl_selesai': tglSelesai,
+                'detail_created_by': createdBy,
+                'detail_tgl_update': tglUpdate,
+                'detail_updated_by': updatedBy
             };
 
-            // Mengisi data teks ke elemen modal secara aman (menghindari Uncaught TypeError)
             Object.keys(elements).forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -55,16 +142,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
             
-            // Khusus STATUS PERIZINAN: Mengubah Teks & Warna Badge secara Dinamis
+            // Manajemen Badge Warna Status
             const statusElement = document.getElementById('detail_status');
             if (statusElement) {
                 statusElement.textContent = statusText.toUpperCase();
-                statusElement.className = "badge"; // Reset class styling dasar bootstrap
+                statusElement.className = "badge"; 
                 
                 const statusLower = statusText.toLowerCase().trim();
-                if (statusLower === 'selesai') {
+                if (statusLower === 'selesai' || statusLower === 'sukses') {
                     statusElement.classList.add('bg-success');
-                } else if (statusLower === 'dalam proses' || statusLower === 'pending') {
+                } else if (statusLower === 'proses' || statusLower === 'pending' || statusLower === 'dalam proses') {
                     statusElement.classList.add('bg-warning', 'text-dark');
                 } else if (statusLower === 'dikembalikan') {
                     statusElement.classList.add('bg-danger');
@@ -72,54 +159,93 @@ document.addEventListener("DOMContentLoaded", function () {
                     statusElement.classList.add('bg-secondary');
                 }
             }
+            
 
-            // Membuka modal detail
             const modalElement = document.getElementById('detailDataModal');
             if (modalElement) {
                 bootstrap.Modal.getOrCreateInstance(modalElement).show();
             }
+            return;
         }
 
         // ---------------------------------------------------------------------
         // B. KONDISI: TOMBOL UPDATE STATUS DIKLIK
         // ---------------------------------------------------------------------
-        if (btnUpdate) {
+        const btnUpdateStatus = event.target.closest('.btn-update-status') || event.target.closest('[data-index]');
+        
+        if (btnUpdateStatus) {
             event.preventDefault();
-            
-            const elId     = document.getElementById('modal_row_index');
-            const elNama   = document.getElementById('modal_nama_pemohon');
-            const elSurat  = document.getElementById('modal_no_surat');
-            const elStatus = document.getElementById('modal_status');
 
-            if (elId)     elId.value     = btnUpdate.getAttribute('data-id') || '';
-            if (elNama)   elNama.value   = btnUpdate.getAttribute('data-nama') || '';
-            if (elSurat)  elSurat.value  = btnUpdate.getAttribute('data-surat') || '';
-            if (elStatus) elStatus.value = btnUpdate.getAttribute('data-status') || '';
-            
-            const updateModalEl = document.getElementById('updateStatusModal');
-            if (updateModalEl) {
-                bootstrap.Modal.getOrCreateInstance(updateModalEl).show();
+            const rowIndex   = btnUpdateStatus.getAttribute('data-index');
+            const antrian    = btnUpdateStatus.getAttribute('data-antrian') || '-';
+            const nama       = btnUpdateStatus.getAttribute('data-nama') || '-';
+            const surat      = btnUpdateStatus.getAttribute('data-surat') || '-';
+            const currentStatus = btnUpdateStatus.getAttribute('data-status') || 'pending';
+
+            const elRowIndex = document.getElementById('modal_row_index');
+            const elAntrian  = document.getElementById('status_no_antrian');
+            const elNama     = document.getElementById('modal_nama_pemohon');
+            const elSurat    = document.getElementById('modal_no_surat');
+            const elSelect   = document.getElementById('modal_select_status');
+
+            if (elRowIndex) elRowIndex.value = rowIndex;
+            if (elAntrian)  elAntrian.value = antrian;
+            if (elNama)     elNama.value = nama;
+            if (elSurat)    elSurat.value = surat;
+
+            if (elSelect) {
+                const statusLower = currentStatus.toLowerCase().trim();
+                if (statusLower === 'selesai' || statusLower === 'sukses') {
+                    elSelect.value = 'selesai';
+                } else if (statusLower === 'dikembalikan') {
+                    elSelect.value = 'dikembalikan';
+                } else if (statusLower === 'proses' || statusLower === 'dalam proses') {
+                    elSelect.value = 'proses';
+                } else {
+                    elSelect.value = 'proses';
+                }
             }
+
+            const modalElement = document.getElementById('updateStatusModal');
+            if (modalElement) {
+                bootstrap.Modal.getOrCreateInstance(modalElement).show();
+            }
+            return;
         }
 
         // ---------------------------------------------------------------------
-        // C. KONDISI: TOMBOL EDIT DATA DIKLIK
+        // C. KONDISI: TOMBOL EDIT DATA DIKLIK (SEKARANG SUDAH MENGISI LENGKAP)
         // ---------------------------------------------------------------------
+        const btnEdit = event.target.closest('.btn-edit-data') || event.target.closest('[data-id]');
+        
         if (btnEdit) {
             event.preventDefault();
             
-            const elEditId    = document.getElementById('edit_row_index');
-            const elEditNama  = document.getElementById('edit_nama');
-            const elEditSurat = document.getElementById('edit_no_surat');
+            const elEditId        = document.getElementById('edit_row_index');
+            const elEditAntrian   = document.getElementById('edit_no_antrian');
+            const elEditNama      = document.getElementById('edit_nama');
+            const elEditSurat     = document.getElementById('edit_no_surat');
+            const elEditDeskripsi = document.getElementById('edit_deskripsi');
+            const elEditPhone     = document.getElementById('edit_phone');
+            const elEditAlamat    = document.getElementById('edit_alamat');
 
-            if (elEditId)    elEditId.value    = btnEdit.getAttribute('data-id') || '';
-            if (elEditNama)  elEditNama.value  = btnEdit.getAttribute('data-nama') || '';
-            if (elEditSurat) elEditSurat.value = btnEdit.getAttribute('data-surat') || '';
+            // Masukkan data pendukung dari elemen baris ke input modal
+            if (elEditId)        elEditId.value        = btnEdit.getAttribute('data-id') || '';
+            if (elEditAntrian)   elEditAntrian.value   = btnEdit.getAttribute('data-antrian') || '';
+            if (elEditNama)      elEditNama.value      = btnEdit.getAttribute('data-nama') || '';
+            if (elEditSurat)     elEditSurat.value     = btnEdit.getAttribute('data-surat') || '';
+            if (elEditDeskripsi) elEditDeskripsi.value = btnEdit.getAttribute('data-deskripsi') || '';
+            if (elEditPhone)     elEditPhone.value     = btnEdit.getAttribute('data-phone') || '';
+            if (elEditAlamat)    elEditAlamat.value    = btnEdit.getAttribute('data-alamat') || '';
             
+            // Buat captcha baru setiap kali modal edit dibuka
+            buatCaptchaBaru();
+
             const editModalEl = document.getElementById('editDataModal');
             if (editModalEl) {
                 bootstrap.Modal.getOrCreateInstance(editModalEl).show();
             }
+            return;
         }
     });
 
@@ -157,6 +283,51 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         searchInput.addEventListener('keyup', filterTable);
         statusFilter.addEventListener('change', filterTable);
+    }
+
+    // =========================================================================
+    // BARU: VERIFIKASI SIDE-CLIENT & ANIMASI LOADING SAAT SUBMIT
+    // =========================================================================
+    const formEdit = document.getElementById('formEditData');
+    if (formEdit) {
+        formEdit.addEventListener('submit', function (event) {
+            const inputUserCaptcha = parseInt(document.getElementById('edit_captcha_input').value);
+            const elErrorMsg = document.getElementById('captcha_error_msg');
+
+            // Cek jika jawaban matematika buatan user tidak sinkron
+            if (inputUserCaptcha !== hasilKunciCaptcha) {
+                event.preventDefault(); // Batalkan submit form
+                if (elErrorMsg) elErrorMsg.classList.remove('d-none');
+                return false;
+            }
+
+            if (elErrorMsg) elErrorMsg.classList.add('d-none');
+
+            // Jalankan animasi loading & anti-double click jika validasi lolos
+            const btnSubmit = formEdit.querySelector('button[type="submit"]');
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = `
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    Menyimpan...
+                `;
+            }
+        });
+    }
+
+    // Sediakan fallback untuk form update status modal biasa
+    const formUpdateStatus = document.querySelector('#updateStatusModal form');
+    if (formUpdateStatus) {
+        formUpdateStatus.addEventListener('submit', function () {
+            const btnSubmit = formUpdateStatus.querySelector('button[type="submit"]');
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = `
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    Menyimpan...
+                `;
+            }
+        });
     }
 });
 

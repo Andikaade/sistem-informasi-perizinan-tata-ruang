@@ -43,6 +43,14 @@
                     <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 @endif
+                
+                {{-- Alert Error untuk Validasi Password Salah --}}
+                @if($errors->has('password_konfirmasi'))
+                <div class="alert alert-danger alert-dismissible fade show small py-1 mb-0" role="alert">
+                    {{ $errors->first('password_konfirmasi') }}
+                    <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                @endif
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="badge bg-success px-3 py-2 rounded-pill">
@@ -87,23 +95,30 @@
                     <tbody>
                         @forelse($perizinanData as $index => $row)
                             @php
-                                // Pemetaan indeks array berdasarkan Google Sheets update (A-K)
                                 $noAntrian = $row[1] ?? '-';
                                 $namaPemohon = $row[2] ?? '-';
                                 $noSurat = $row[3] ?? '-';
                                 $deskripsi = $row[4] ?? '-';
                                 $phone = $row[5] ?? '-';
                                 $alamat = $row[6] ?? '-';
-                                $tglPengajuan = $row[7] ?? '-';
-                                $tglProses = $row[8] ?? '-';
-                                $tglSelesai = $row[9] ?? '-';
-                                $statusRaw = strtolower($row[10] ?? '');
+                                $tglPengajuan = $row[8] ?? '-';
+                                $tglProses = $row[9] ?? '-';
+                                $tglSelesai = $row[10] ?? '-';
+                                $statusRaw = trim(strtolower($row[11] ?? ''));
+                                
+                                // Data Kolom Baru untuk Audit Trail
+                                $createBy = $row[7] ?? '-';
+                                $tglUpdate = $row[12] ?? '-';
+                                $updateBy = $row[13] ?? '-';
 
-                                // Logika Warna Badge Status
                                 $badgeColor = 'bg-secondary';
-                                if($statusRaw == 'selesai') $badgeColor = 'bg-success';
-                                elseif($statusRaw == 'dalam proses') $badgeColor = 'bg-warning text-dark';
-                                elseif($statusRaw == 'dikembalikan') $badgeColor = 'bg-danger';
+                                if ($statusRaw == 'selesai') {
+                                    $badgeColor = 'bg-success';
+                                } elseif ($statusRaw == 'dalam proses' || $statusRaw == 'proses') { 
+                                    $badgeColor = 'bg-warning text-dark';
+                                } elseif ($statusRaw == 'dikembalikan') {
+                                    $badgeColor = 'bg-danger';
+                                }
                             @endphp
                             <tr>
                                 <td class="text-center">{{ $index + 1 }}</td>
@@ -111,30 +126,38 @@
                                 <td>{{ $namaPemohon }}</td> 
                                 <td>{{ $noSurat }}</td>
                                 <td class="text-center">
-                                    <span class="badge {{ $badgeColor }}">{{ ucfirst($row[10] ?? 'Pending') }}</span>
+                                    <span class="badge {{ $badgeColor }}">{{ ucfirst($row[11] ?? 'Pending') }}</span>
                                 </td>
                                 <td class="text-nowrap text-center">
                                     <button class="btn-detail-data btn btn-info btn-sm text-white"
+                                        data-antrian="{{ $noAntrian }}"
+                                        data-nama="{{ $namaPemohon }}"
+                                        data-surat="{{ $noSurat }}"
+                                        data-deskripsi="{{ $deskripsi }}"
+                                        data-phone="{{ $phone }}"
+                                        data-alamat="{{ $alamat }}"
+                                        data-tgl-pengajuan="{{ $tglPengajuan }}"
+                                        data-tgl-proses="{{ $tglProses }}"
+                                        data-tgl-selesai="{{ $tglSelesai }}"
+                                        data-status="{{ ucfirst($row[11] ?? 'Pending') }}"
+                                        data-created-by="{{ $createBy }}"
+                                        data-tgl-update="{{ $tglUpdate }}"
+                                        data-update-by="{{ $updateBy }}"
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-placement="top" 
+                                        data-bs-title="Lihat Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+
+                                    <button class="btn-update-status btn btn-warning btn-sm text-white"
+                                        data-index="{{ $index + 2 }}" {{-- Indeks baris asli di Google Sheets (dimulai dari baris 2) --}}
                                         data-antrian="{{ $row[1] ?? '-' }}"
                                         data-nama="{{ $row[2] ?? '-' }}"
                                         data-surat="{{ $row[3] ?? '-' }}"
-                                        data-deskripsi="{{ $row[4] ?? '-' }}"
-                                        data-phone="{{ $row[5] ?? '-' }}"
-                                        data-alamat="{{ $row[6] ?? '-' }}"
-                                        data-tgl-pengajuan="{{ $row[7] ?? '-' }}"
-                                        data-tgl-proses="{{ $row[8] ?? '-' }}"
-                                        data-tgl-selesai="{{ $row[9] ?? '-' }}"
-                                        data-status="{{ $row[10] ?? 'Pending' }}">
-                                        <i class="fas fa-eye"></i> 
-                                    </button>
-
-                                    <button type="button" 
-                                            class="btn btn-sm btn-warning text-white btn-update-status" 
-                                            title="Update Status"
-                                            data-id="{{ $index }}" 
-                                            data-nama="{{ $namaPemohon }}" 
-                                            data-surat="{{ $noSurat }}" 
-                                            data-status="{{ $statusRaw }}">
+                                        data-status="{{ $row[11] ?? 'Pending' }}"
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-placement="top" 
+                                        data-bs-title="Perbaharui Data">
                                         <i class="fas fa-sync-alt"></i>
                                     </button>
 
@@ -142,15 +165,25 @@
                                             class="btn btn-sm btn-primary btn-edit-data" 
                                             title="Edit Data"
                                             data-id="{{ $index }}" 
+                                            data-antrian="{{ $noAntrian }}"
                                             data-nama="{{ $namaPemohon }}" 
-                                            data-surat="{{ $noSurat }}">
+                                            data-surat="{{ $noSurat }}"
+                                            data-deskripsi="{{ $deskripsi }}"
+                                            data-phone="{{ $phone }}"
+                                            data-alamat="{{ $alamat }}"
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-placement="top" 
+                                            data-bs-title="Ubah Data">
                                         <i class="fas fa-edit"></i>
                                     </button>
 
                                     <form action="{{ route('perizinan.destroy', $index) }}" method="POST" class="d-inline m-0" onsubmit="return window.konfirmasiHapus(event)">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data"
+                                                data-bs-toggle="tooltip" 
+                                                data-bs-placement="top" 
+                                                data-bs-title="Hapus Data">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
@@ -179,32 +212,37 @@
                     @method('PUT')
                     <div class="modal-body">
                         <input type="hidden" name="row_index" id="modal_row_index">
+
                         <div class="mb-3">
-                            <label class="form-label fw-semibold text-muted">Nama Pemohon</label>
+                            <label class="form-label bg-light text-muted small fw-bold text-uppercase d-block p-1 ps-2 rounded">No Antrian</label>
+                            <input type="text" id="status_no_antrian" class="form-control bg-light fw-semibold" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label bg-light text-muted small fw-bold text-uppercase d-block p-1 ps-2 rounded">Nama Pemohon</label>
                             <input type="text" id="modal_nama_pemohon" class="form-control bg-light" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold text-muted">No Surat</label>
+                            <label class="form-label bg-light text-muted small fw-bold text-uppercase d-block p-1 ps-2 rounded">No Surat</label>
                             <input type="text" id="modal_no_surat" class="form-control bg-light" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Pilih Status Baru</label>
-                            <select name="status" id="modal_status" class="form-select" required>
+                            <label class="form-label fw-bold text-dark">Pilih Status Baru</label>
+                            <select name="status" id="modal_select_status" class="form-select" required>
+                                <option value="proses">Proses</option>
                                 <option value="selesai">Selesai</option>
-                                <option value="dalam proses">Dalam Proses</option>
                                 <option value="dikembalikan">Dikembalikan</option>
                             </select>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary btn-sm px-3">Simpan Perubahan</button>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
+    {{-- MODAL 2: EDIT DATA LENGKAP + CAPTCHA + VERIFIKASI PASSWORD --}}
     <div class="modal fade" id="editDataModal" tabindex="-1" aria-labelledby="editDataModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -212,18 +250,55 @@
                     <h5 class="modal-title fw-bold" id="editDataModalLabel">Edit Data Perizinan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('perizinan.update-data') }}" method="POST">
+                <form action="{{ route('perizinan.update-data') }}" method="POST" id="formEditData">
                     @csrf 
                     @method('PUT')
                     <div class="modal-body">
                         <input type="hidden" name="row_index" id="edit_row_index">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted">No Antrian</label>
+                            <input type="text" id="edit_no_antrian" class="form-control bg-light text-muted fw-bold" readonly>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nama Pemohon</label>
-                            <input type="text" name="nama" id="edit_nama" class="form-control" required>
+                            <input type="text" name="nama_pemohon" id="edit_nama" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">No Surat</label>
                             <input type="text" name="no_surat" id="edit_no_surat" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Deskripsi Surat</label>
+                            <textarea name="deskripsi_surat" id="edit_deskripsi" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Phone / WhatsApp</label>
+                            <input type="text" name="phone" id="edit_phone" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Alamat</label>
+                            <textarea name="alamat" id="edit_alamat" class="form-control" rows="2" required></textarea>
+                        </div>
+                        
+                        {{-- Validasi Tambahan Keamanan: Captcha Matematika --}}
+                        <div class="mb-3 p-3 bg-light border rounded-3 mb-2">
+                            <label class="form-label fw-bold text-secondary"><i class="fas fa-calculator me-1"></i> Verifikasi Keamanan (Captcha)</label>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span id="captcha_text" class="fw-bold fs-5 px-3 py-1 bg-secondary text-white rounded shadow-sm" style="letter-spacing: 2px; user-select: none;">3 + 5</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn_refresh_captcha" title="Ganti Pertanyaan">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <input type="number" id="edit_captcha_input" name="captcha_jawaban" class="form-control" placeholder="Berapa hasil penjumlahan di atas?" required>
+                            <small class="text-danger d-none" id="captcha_error_msg">Jawaban Captcha salah! Silakan hitung kembali.</small>
+                        </div>
+
+                        {{-- Fitur Verifikasi Password Keamanan --}}
+                        <div class="mb-3 p-3 bg-light border border-danger-subtle rounded-3">
+                            <label class="form-label fw-bold text-danger"><i class="fas fa-lock me-1"></i> Verifikasi Password Anda</label>
+                            <input type="password" name="password_konfirmasi" class="form-control" placeholder="Masukkan password akun login Anda" required>
+                            <div class="form-text text-muted small">Wajib diisi agar data tidak diubah sembarangan.</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -234,7 +309,7 @@
             </div>
         </div>
     </div>
-
+    {{-- MODAL: DETAIL DATA --}}
     <div class="modal fade" id="detailDataModal" tabindex="-1" aria-labelledby="detailDataModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -248,45 +323,61 @@
                     <table class="table table-bordered table-striped m-0">
                         <tr>
                             <th style="width: 30%;" class="ps-3 bg-light text-muted small fw-bold text-uppercase">No Antrian</th>
-                            <td id="detail_no_antrian" class="ps-3 fw-semibold">{{ $noAntrian }}</td>
+                            <td id="detail_no_antrian" class="ps-3 fw-semibold"></td>
                         </tr>
                         <tr>
                             <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Nama Pemohon</th>
-                            <td id="detail_nama_pemohon" class="ps-3">{{$namaPemohon}}</td>
+                            <td id="detail_nama_pemohon" class="ps-3"></td>
                         </tr>
                         <tr>
                             <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">No. Surat</th>
-                            <td id="detail_no_surat" class="ps-3">{{$noSurat}}</td>
+                            <td id="detail_no_surat" class="ps-3"></td>
                         </tr>
                         <tr>
                             <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Deskripsi Surat</th>
-                            <td id="detail_deskripsi_surat" class="ps-3 text-wrap">{{$deskripsi}}</td>
+                            <td id="detail_deskripsi_surat" class="ps-3 text-wrap"></td>
                         </tr>
                         <tr>
                             <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">No. HP / WhatsApp</th>
-                            <td id="detail_phone" class="ps-3">{{$phone}}</td>
+                            <td id="detail_phone" class="ps-3"></td>
                         </tr>
                         <tr>
                             <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Alamat</th>
-                            <td id="detail_alamat" class="ps-3 text-wrap">{{$alamat}}</td>
+                            <td id="detail_alamat" class="ps-3 text-wrap"></td>
                         </tr>
                         <tr>
                             <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Tanggal Pengajuan</th>
-                            <td id="detail_tgl_pengajuan" class="ps-3">{{$tglPengajuan}}</td>
+                            <td id="detail_tgl_pengajuan" class="ps-3"></td>
                         </tr>
                         <tr>
                             <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Tanggal Proses</th>
-                            <td id="detail_tgl_proses" class="ps-3">{{$tglProses}}</td>
+                            <td id="detail_tgl_proses" class="ps-3"></td>
                         </tr>
                         <tr>
                             <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Tanggal Selesai</th>
-                            <td id="" class="ps-3">{{$tglSelesai}}</td>
+                            <td id="detail_tgl_selesai" class="ps-3"></td>
                         </tr>
                         <tr>
                             <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Status Perizinan</th>
                             <td class="ps-3">
                                 <span id="detail_status" class="badge bg-secondary"></span>
                             </td>
+                        </tr>
+                        
+                        <tr class="table-info">
+                            <th colspan="2" class="ps-3 text-dark small fw-bold text-uppercase text-right">Log Riwayat Data</th>
+                        </tr>
+                        <tr>
+                            <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Dibuat oleh</th>
+                            <td id="detail_created_by" class="ps-3 text-primary fw-semibold"></td>
+                        </tr>
+                        <tr>
+                            <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Tanggal Perubahan Data</th>
+                            <td id="detail_tgl_update" class="ps-3"></td>
+                        </tr>
+                        <tr>
+                            <th class="ps-3 bg-light text-muted small fw-bold text-uppercase">Perubahan Data oleh</th>
+                            <td id="detail_updated_by" class="ps-3 text-primary fw-semibold"></td>
                         </tr>
                     </table>
                 </div>
@@ -298,6 +389,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> {{-- Dipastikan jQuery aktif --}}
     <script src="{{ asset('js/dashboard.js') }}"></script>
 </body>
 </html>

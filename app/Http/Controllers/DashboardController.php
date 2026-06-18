@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Google\Client;
 use Google\Service\Sheets;
+use Google\Service\Sheets\ValueRange;
 use Google\Service\Sheets\BatchUpdateSpreadsheetRequest;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+
 
 class DashboardController extends Controller
 {
@@ -29,10 +31,7 @@ class DashboardController extends Controller
     public function index()
     {
         $service = $this->getGoogleSheetsService();
-        
-        // PERBAIKAN 1: Lebarkan range pengambilan data dari A2:D menjadi A2:K 
-        // Agar kolom status (Kolom K) ikut terbaca oleh aplikasi Laravel
-        $range = 'Sheet1!A2:K'; 
+        $range = 'Sheet1!A2:N'; 
 
         try {
             $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
@@ -40,25 +39,11 @@ class DashboardController extends Controller
         } catch (\Exception $e) {
             $rows = [];
         }
-               
+                
         return view('dashboard', [
             'perizinanData' => $rows ?? [],
             'adminName' => auth()->user()->name ?? 'Admin'
         ]);
-
-        // Catatan: Kode pagination di bawah ini tidak akan pernah dieksekusi 
-        // karena terkena statement 'return view' di atasnya. 
-        // Jika ingin menggunakan pagination, silakan pindahkan return view-nya ke bawah.
-        $perPage = 10; 
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $itemCollection = collect($allRows);
-
-        $currentPageItems = $itemCollection->slice(($currentPage * $perPage) - $perPage, $perPage)->all();
-
-        $paginatedItems = new LengthAwarePaginator($currentPageItems , count($itemCollection), $perPage);
-        $paginatedItems->setPath($request->url());
-
-        return view('dashboard', ['dataPerizinan' => $paginatedItems]);
     } 
 
     public function updateStatus(Request $request)
@@ -69,27 +54,46 @@ class DashboardController extends Controller
         ]);
 
         $rowIndex = $request->input('row_index');
-        $spreadsheetRow = $rowIndex + 2; 
-        $newStatus = ucfirst($request->input('status')); 
+        $spreadsheetRow = $rowIndex; 
 
         try {
             $service = $this->getGoogleSheetsService();
+            $statusInput = trim(strtolower($request->input('status')));
             
-            // PERBAIKAN 2: Ubah range simpan status dari kolom D ke kolom K
-            $range = "Sheet1!K" . $spreadsheetRow; 
+            if ($statusInput === 'proses') {
+                $newStatus = 'Dalam Proses';
+            } else {
+                $newStatus = ucfirst($statusInput); // "Selesai" atau "Dikembalikan"
+            }
 
-            $body = new \Google\Service\Sheets\ValueRange([
+            // 1. UPDATE STATUS UTAMA (Kolom L)
+            $rangeStatus = "Sheet1!L" . $spreadsheetRow; 
+            $bodyStatus = new \Google\Service\Sheets\ValueRange([
                 'values' => [[$newStatus]]
             ]);
+            $service->spreadsheets_values->update($this->spreadsheetId, $rangeStatus, $bodyStatus, ['valueInputOption' => 'RAW']);
 
-            $service->spreadsheets_values->update(
-                $this->spreadsheetId, 
-                $range, 
-                $body, 
-                ['valueInputOption' => 'RAW']
-            );
+            // Format tanggal pengajuan/proses/selesai (Template default: 18-Jun-2026)
+            $dateFormatted = now()->format('j-M-Y'); 
+            
+    
+            if ($statusInput === 'proses') {
+                // Isi Kolom J (tgl_proses)
+                $rangeProses = "Sheet1!J" . $spreadsheetRow;
+                $bodyProses = new \Google\Service\Sheets\ValueRange([
+                    'values' => [[$dateFormatted]]
+                ]);
+                $service->spreadsheets_values->update($this->spreadsheetId, $rangeProses, $bodyProses, ['valueInputOption' => 'RAW']);
+                
+            } elseif ($statusInput === 'selesai' || $statusInput === 'dikembalikan') {
+                $rangeSelesai = "Sheet1!K" . $spreadsheetRow;
+                $bodySelesai = new \Google\Service\Sheets\ValueRange([
+                    'values' => [[$dateFormatted]]
+                ]);
+                $service->spreadsheets_values->update($this->spreadsheetId, $rangeSelesai, $bodySelesai, ['valueInputOption' => 'RAW']);
+            }
 
-            return redirect()->route('dashboard')->with('success', 'Status perizinan berhasil diperbarui langsung ke Google Sheets!');
+            return redirect()->route('dashboard')->with('success', 'Status perizinan dan tanggal alur berhasil diperbarui!');
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui status: ' . $e->getMessage());
@@ -98,56 +102,84 @@ class DashboardController extends Controller
 
     public function updateData(Request $request)
     {
+        // 1. Validasi semua input yang dikirimkan dari modal form edit
         $request->validate([
-            'row_index' => 'required|integer',
-            'nama' => 'required|string',
-            'no_surat' => 'required|string',
+            'row_index'           => 'required|integer',
+            'nama_pemohon'        => 'required|string',
+            'no_surat'            => 'required|string',
+            'deskripsi_surat'     => 'required|string',
+            'phone'               => 'required|string',
+            'alamat'              => 'required|string',
+            'captcha_jawaban'     => 'required|integer',
+            'password_konfirmasi' => 'required|string',
         ]);
 
-        $rowIndex = $request->input('row_index');
-        $spreadsheetRow = $rowIndex + 2; 
+        // 2. Proteksi Keamanan: Verifikasi kesesuaian password akun dengan admin yang login
+        if (!Hash::check($request->input('password_konfirmasi'), auth()->user()->password)) {
+            return redirect()->back()->with('error', 'Gagal memperbarui data: Konfirmasi password yang Anda masukkan salah!');
+        }
+
+        $spreadsheetRow = $request->input('row_index');
 
         try {
             $service = $this->getGoogleSheetsService();
             
-            // PERBAIKAN 3: Sesuai struktur baru, Nama Pemohon ada di kolom C dan No Surat ada di kolom D
-            $range = "Sheet1!C" . $spreadsheetRow . ":D" . $spreadsheetRow; 
+            // 3. UPDATE DATA UTAMA (Kolom C sampai G)
+            // C: nama_pemohon, D: no_surat, E: deskripsi_surat, F: phone, G: alamat
+            $rangeData = "Sheet1!C" . $spreadsheetRow . ":G" . $spreadsheetRow; 
 
-            $body = new \Google\Service\Sheets\ValueRange([
+            $bodyData = new ValueRange([
                 'values' => [[
-                    $request->input('nama'),
-                    $request->input('no_surat')
+                    $request->input('nama_pemohon'),
+                    $request->input('no_surat'),
+                    $request->input('deskripsi_surat'),
+                    $request->input('phone'),
+                    $request->input('alamat')
+                ]]
+            ]);
+            
+            $service->spreadsheets_values->update(
+                $this->spreadsheetId, 
+                $rangeData, 
+                $bodyData, 
+                ['valueInputOption' => 'RAW']
+            );
+
+            // 4. FORMAT LOG RIWAYAT (Kolom M dan N)
+            // Menyertakan jam menit (H:i) agar sesuai dengan format log edit di spreadsheet Anda
+            $dateTimeLog = now()->format('d/m/Y H:i'); 
+            $adminName = auth()->user()->name ?? 'admin';
+
+            $rangeAudit = "Sheet1!M" . $spreadsheetRow . ":N" . $spreadsheetRow;
+
+            $bodyAudit = new ValueRange([
+                'values' => [[
+                    $adminName,   // Kolom M: Diisi Nama Admin
+                    $dateTimeLog  // Kolom N: Diisi Waktu Update (Tanggal & Jam)
                 ]]
             ]);
 
             $service->spreadsheets_values->update(
                 $this->spreadsheetId, 
-                $range, 
-                $body, 
+                $rangeAudit, 
+                $bodyAudit, 
                 ['valueInputOption' => 'RAW']
             );
 
-            return redirect()->route('dashboard')->with('success', 'Data administrasi pemohon berhasil diperbarui di Google Sheets!');
+            return redirect()->route('dashboard')->with('success', 'Data administrasi dan log riwayat berhasil diperbarui!');
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
         }
     }
-
+    
     public function destroy($index)
     {
         try {
-            $client = new \Google\Client();
-            $client->setApplicationName('Tracking Perizinan');
-            $client->setScopes([\Google\Service\Sheets::SPREADSHEETS]);
-            $client->setAuthConfig(storage_path('app/google-sheets/credentials.json'));
-
-            $service = new \Google\Service\Sheets($client);
-            
-            $spreadsheetId = '1zY1TCWEoHDW24uWVm7fQ-i07QySyBPmJzno6CE7mOUs'; 
+            $service = $this->getGoogleSheetsService();
             $sheetName = 'Sheet1'; 
 
-            $spreadsheet = $service->spreadsheets->get($spreadsheetId);
+            $spreadsheet = $service->spreadsheets->get($this->spreadsheetId);
             $sheetId = null;
             foreach ($spreadsheet->getSheets() as $sheet) {
                 if ($sheet->getProperties()->getTitle() === $sheetName) {
@@ -162,7 +194,7 @@ class DashboardController extends Controller
 
             $realRowIndex = (int)$index + 1; 
 
-            $requestBody = new \Google\Service\Sheets\BatchUpdateSpreadsheetRequest([
+            $requestBody = new BatchUpdateSpreadsheetRequest([
                 'requests' => [
                     'deleteDimension' => [
                         'range' => [
@@ -175,7 +207,7 @@ class DashboardController extends Controller
                 ]
             ]);
 
-            $service->spreadsheets->batchUpdate($spreadsheetId, $requestBody);
+            $service->spreadsheets->batchUpdate($this->spreadsheetId, $requestBody);
 
             return redirect()->route('dashboard')->with('success', 'Data perizinan berhasil dihapus dari Google Sheets!');
 
