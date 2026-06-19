@@ -6,6 +6,7 @@ use App\Http\Controllers\KontakController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Schedule;
+use App\Http\Controllers\UserController;
 
 // ==========================================
 // 1. HALAMAN UMUM (GUEST / PUBLIC)
@@ -46,4 +47,15 @@ Route::middleware('auth')->group(function () {
 });
 
 Schedule::command('app:auto-delete-old-perizinan')->daily();
+
+
+// ==========================================
+// 3. Route Manajemen User
+// ==========================================
+Route::middleware(['auth'])->group(function () {
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+});
 

@@ -17,7 +17,7 @@
             </a>
             
             <div class="d-flex align-items-center gap-3">
-                <a href="#" class="btn btn-dark btn-sm fw-medium px-2">Manajemen User</a>
+                <a href="{{ route('users.index') }}" class="btn btn-dark btn-sm fw-medium px-2">Manajemen User</a>
                 <form action="{{ route('logout') }}" method="POST" class="m-0">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-danger px-3 rounded-2 fw-medium">
