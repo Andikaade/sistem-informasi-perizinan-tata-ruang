@@ -17,10 +17,16 @@
             </a>
             
             <div class="d-flex align-items-center gap-3">
-                <a href="{{ route('users.index') }}" class="btn btn-dark btn-sm fw-medium px-2">Manajemen User</a>
+                {{-- Hanya muncul jika user yang login adalah Master Administrator --}}
+                @if(auth()->user()->is_admin == 1)
+                    <a href="{{ route('users.index') }}" class="btn btn-warning me-2 text-dark d-inline-flex align-items-center fw-bold">
+                        <i class="fas fa-users me-2"></i>
+                        Manajemen User
+                    </a>
+                @endif
                 <form action="{{ route('logout') }}" method="POST" class="m-0">
                     @csrf
-                    <button type="submit" class="btn btn-sm btn-outline-danger px-3 rounded-2 fw-medium">
+                    <button type="submit" class="btn btn-sm btn-outline-warning px-3 rounded-2 fw-medium">
                         Logout
                     </button>
                 </form>

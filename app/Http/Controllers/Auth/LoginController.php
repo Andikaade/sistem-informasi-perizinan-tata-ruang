@@ -28,9 +28,23 @@ class LoginController extends Controller
 
         // Proses autentikasi langsung mencocokkan ke database MySQL Laragon
         if (Auth::attempt($credentials)) {
+            
+            // PROTEKSI KEAMANAN: Cek apakah akun user dalam status Non-Aktif
+            if (!auth()->user()->is_active) {
+                // Keluarkan kembali secara paksa dari sesi autentikasi
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                // Kembalikan ke halaman login dengan pesan error khusus status akun
+                return redirect()->route('login')->withErrors([
+                    'username' => 'Akun Anda telah dinonaktifkan oleh Administrator. Silakan hubungi staff IT.',
+                ])->onlyInput('username');
+            }
+
+            // Jika akun aktif, regenerasi session dan izinkan masuk ke dashboard
             $request->session()->regenerate();
         
-            // Jika sukses, masuk ke halaman dashboard admin
             return redirect()->intended('/dashboard');
         }
 
