@@ -150,11 +150,11 @@
                                                 {{-- Baris 1: Nama Lengkap & NIP --}}
                                                 <div class="row">
                                                     <div class="col-md-6 mb-3">
-                                                        <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Nama Lengkap</label>
+                                                        <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Nama Lengkap</label>
                                                         <input type="text" name="name" class="form-control rounded-2" value="{{ $user->name }}" required>
                                                     </div>
                                                     <div class="col-md-6 mb-3">
-                                                        <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">NIP (Nomor Induk Pegawai)</label>
+                                                        <label class="form-label fw-bold small text-muted mb-1 text-uppercase">NIP (Nomor Induk Pegawai)</label>
                                                         <input type="text" name="nip" class="form-control rounded-2" value="{{ $user->nip }}" placeholder="Masukkan NIP jika ASN">
                                                     </div>
                                                 </div>
@@ -162,11 +162,11 @@
                                                 {{-- Baris 2: Username & Alamat Email --}}
                                                 <div class="row">
                                                     <div class="col-md-6 mb-3">
-                                                        <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Username</label>
+                                                        <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Username</label>
                                                         <input type="text" name="username" class="form-control rounded-2" value="{{ $user->username }}" required>
                                                     </div>
                                                     <div class="col-md-6 mb-3">
-                                                        <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Alamat Email</label>
+                                                        <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Alamat Email</label>
                                                         <input type="email" name="email" class="form-control rounded-2" value="{{ $user->email }}" required>
                                                     </div>
                                                 </div>
@@ -174,15 +174,15 @@
                                                 {{-- Baris 3: Jabatan, No HP, & Role Akses --}}
                                                 <div class="row">
                                                     <div class="col-md-4 mb-3">
-                                                        <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Jabatan / Title</label>
+                                                        <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Jabatan / Title</label>
                                                         <input type="text" name="title" class="form-control rounded-2" value="{{ $user->title }}">
                                                     </div>
                                                     <div class="col-md-4 mb-3">
-                                                        <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">No. HP / WhatsApp</label>
+                                                        <label class="form-label fw-bold small text-muted mb-1 text-uppercase">No. HP / WhatsApp</label>
                                                         <input type="text" name="phone" class="form-control rounded-2" value="{{ $user->phone }}">
                                                     </div>
                                                     <div class="col-md-4 mb-3">
-                                                        <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Role Akses</label>
+                                                        <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Role Akses</label>
                                                         <select name="is_admin" class="form-select rounded-2" required>
                                                             <option value="0" {{ $user->is_admin == 0 ? 'selected' : '' }}>Admin</option>
                                                             <option value="1" {{ $user->is_admin == 1 ? 'selected' : '' }}>Master Administrator</option>
@@ -199,18 +199,18 @@
                                                 {{-- Baris 4: Password Baru & Konfirmasi --}}
                                                 <div class="row">
                                                     <div class="col-md-6 mb-3">
-                                                        <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Password Baru</label>
+                                                        <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Password Baru</label>
                                                         <input type="password" name="password" class="form-control rounded-2" placeholder="Minimal 6 karakter">
                                                     </div>
                                                     <div class="col-md-6 mb-3">
-                                                        <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Konfirmasi Password Baru</label>
+                                                        <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Konfirmasi Password Baru</label>
                                                         <input type="password" name="password_confirmation" class="form-control rounded-2" placeholder="Ulangi password baru">
                                                     </div>
                                                 </div>
 
                                                 {{-- Baris 5: Status Akun --}}
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Status Akun</label>
+                                                    <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Status Akun</label>
                                                     <select name="is_active" class="form-select rounded-2" required>
                                                         <option value="1" {{ $user->is_active ? 'selected' : '' }}>Aktif</option>
                                                         <option value="0" {{ !$user->is_active ? 'selected' : '' }}>Non-Aktif (Blokir Akses)</option>
@@ -260,7 +260,7 @@
                                     <i class="fas fa-exclamation-triangle me-2 fs-5"></i>
                                     <ul class="mb-0 ps-3">
                                         @foreach ($errors->all() as $error)
-                                            <li class="fw-semibold small">{{ $error }}</li>
+                                            <li class="fw-bold small">{{ $error }}</li>
                                         @endforeach
                                     </ul>
                                 </div>
@@ -271,11 +271,11 @@
                         {{-- Baris 1: Nama Lengkap & NIP --}}
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Nama Lengkap</label>
+                                <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Nama Lengkap</label>
                                 <input type="text" name="name" class="form-control" placeholder="Masukkan nama lengkap" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">NIP (Nomor Induk Pegawai)</label>
+                                <label class="form-label fw-bold small text-muted mb-1 text-uppercase">NIP (Nomor Induk Pegawai)</label>
                                 <input type="text" name="nip" class="form-control" placeholder="Contoh: 19880102XXXXXXXXXX">
                             </div>
                         </div>
@@ -283,11 +283,11 @@
                         {{-- Baris 2: Username & Alamat Email --}}
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Username</label>
+                                <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Username</label>
                                 <input type="text" name="username" class="form-control" placeholder="Contoh: admin_sijunjung" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Alamat Email</label>
+                                <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Alamat Email</label>
                                 <input type="email" name="email" class="form-control" placeholder="contoh: user@sijunjung.go.id" required>
                             </div>
                         </div>
@@ -295,15 +295,15 @@
                         {{-- Baris 3: Jabatan, No. HP, & Role Akses --}}
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Jabatan / Title</label>
+                                <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Jabatan / Title</label>
                                 <input type="text" name="title" class="form-control" placeholder="Contoh: Kabid Tata Ruang">
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">No. HP / WhatsApp</label>
+                                <label class="form-label fw-bold small text-muted mb-1 text-uppercase">No. HP / WhatsApp</label>
                                 <input type="text" name="phone" class="form-control" placeholder="Contoh: 0812758xxxx">
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Role Akses</label>
+                                <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Role Akses</label>
                                 <select name="is_admin" class="form-select" required>
                                     <option value="0" selected>Admin</option>
                                     <option value="1">Master Administrator</option>
@@ -316,11 +316,11 @@
                         {{-- Baris 4: Password & Konfirmasi --}}
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Password</label>
+                                <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Password</label>
                                 <input type="password" name="password" class="form-control" placeholder="Minimal 6 karakter" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold small text-muted mb-1 text-uppercase">Konfirmasi Password</label>
+                                <label class="form-label fw-bold small text-muted mb-1 text-uppercase">Konfirmasi Password</label>
                                 <input type="password" name="password_confirmation" class="form-control" placeholder="Ulangi password" required>
                             </div>
                         </div>

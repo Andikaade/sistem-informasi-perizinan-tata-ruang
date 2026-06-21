@@ -9,7 +9,7 @@ use Google\Service\Sheets\ValueRange;
 use Google\Service\Sheets\BatchUpdateSpreadsheetRequest;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-
+use Illuminate\Support\Facades\Hash; // Ditambahkan agar proses Hash::check pada updateData tidak error
 
 class DashboardController extends Controller
 {
@@ -26,6 +26,56 @@ class DashboardController extends Controller
         $client->setAuthConfig(storage_path('app/google-sheets/credentials.json'));
 
         return new Sheets($client);
+    }
+
+    /**
+     * REVISI: Generate Nomor Antrian otomatis dari data Google Sheets
+     */
+    public function generateNoAntrian()
+    {
+        try {
+            $service = $this->getGoogleSheetsService();
+            // Ambil seluruh data dari kolom nomor antrian (Kolom B)
+            $range = 'Sheet1!B2:B'; 
+            
+            $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
+            $rows = $response->getValues();
+
+            $maxNumber = 0;
+
+            if (!empty($rows)) {
+                foreach ($rows as $row) {
+                    // Kolom B adalah index pertama dari range target yang kita ambil
+                    $noAntrian = $row[0] ?? ''; 
+
+                    if (!empty($noAntrian)) {
+                        // Mengambil angka saja dari isi string (misal "0028" atau "A0028" diekstrak menjadi integer 28)
+                        $numericPart = (int) filter_var($noAntrian, FILTER_SANITIZE_NUMBER_INT);
+                        if ($numericPart > $maxNumber) {
+                            $maxNumber = $numericPart;
+                        }
+                    }
+                }
+            }
+
+            // Tambahkan nilai 1 dari nomor urut terbesar yang ditemukan di Google Sheets
+            $nextNumber = $maxNumber + 1;
+
+            // Sesuaikan format padding menjadi 4 digit angka (misal: 29 menjadi "0029")
+            // Jika ingin menggunakan prefiks huruf, bisa diubah menjadi: 'A' . str_pad(...)
+            $nextAntrian = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+            return response()->json([
+                'success' => true,
+                'no_antrian' => $nextAntrian
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal generate nomor antrian: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function index()
@@ -76,7 +126,6 @@ class DashboardController extends Controller
             // Format tanggal pengajuan/proses/selesai (Template default: 18-Jun-2026)
             $dateFormatted = now()->format('j-M-Y'); 
             
-    
             if ($statusInput === 'proses') {
                 // Isi Kolom J (tgl_proses)
                 $rangeProses = "Sheet1!J" . $spreadsheetRow;
@@ -146,7 +195,6 @@ class DashboardController extends Controller
             );
 
             // 4. FORMAT LOG RIWAYAT (Kolom M dan N)
-            // Menyertakan jam menit (H:i) agar sesuai dengan format log edit di spreadsheet Anda
             $dateTimeLog = now()->format('d/m/Y H:i'); 
             $adminName = auth()->user()->name ?? 'admin';
 

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin | Petaru</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -17,13 +18,13 @@
             </a>
             
             <div class="d-flex align-items-center gap-3">
-                {{-- Hanya muncul jika user yang login adalah Master Administrator --}}
                 @if(auth()->user()->is_admin == 1)
-                    <a href="{{ route('users.index') }}" class="btn btn-warning me-2 text-dark d-inline-flex align-items-center fw-bold">
+                    <a href="{{ route('users.index') }}" class="btn btn-warning btn-sm text-dark d-inline-flex align-items-center fw-bold">
                         <i class="fas fa-users me-2"></i>
                         Manajemen User
                     </a>
                 @endif
+
                 <form action="{{ route('logout') }}" method="POST" class="m-0">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-warning px-3 rounded-2 fw-medium">
@@ -46,14 +47,6 @@
                 @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show small py-1 mb-0" role="alert">
                     {{ session('success') }}
-                    <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
-                
-                {{-- Alert Error untuk Validasi Password Salah --}}
-                @if($errors->has('password_konfirmasi'))
-                <div class="alert alert-danger alert-dismissible fade show small py-1 mb-0" role="alert">
-                    {{ $errors->first('password_konfirmasi') }}
                     <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 @endif
@@ -82,7 +75,9 @@
                 
                 <div class="d-flex gap-2">
                     <a href="#" class="btn btn-success btn-sm px-3 text-nowrap"><i class="fas fa-file-excel me-1"></i> Ekspor Excel</a>
-                    <a href="#" class="btn btn-primary btn-sm px-3 text-nowrap">+ Tambah Data</a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahPerizinan">
+                        <i class="fas fa-plus me-1"></i> Tambah Perizinan
+                    </button>
                 </div>
             </div>
 
@@ -112,7 +107,6 @@
                                 $tglSelesai = $row[10] ?? '-';
                                 $statusRaw = trim(strtolower($row[11] ?? ''));
                                 
-                                // Data Kolom Baru untuk Audit Trail
                                 $createBy = $row[7] ?? '-';
                                 $tglUpdate = $row[12] ?? '-';
                                 $updateBy = $row[13] ?? '-';
@@ -156,7 +150,7 @@
                                     </button>
 
                                     <button class="btn-update-status btn btn-warning btn-sm text-white"
-                                        data-index="{{ $index + 2 }}" {{-- Indeks baris asli di Google Sheets (dimulai dari baris 2) --}}
+                                        data-index="{{ $index + 2 }}" 
                                         data-antrian="{{ $row[1] ?? '-' }}"
                                         data-nama="{{ $row[2] ?? '-' }}"
                                         data-surat="{{ $row[3] ?? '-' }}"
@@ -206,6 +200,7 @@
         </div>
     </div>
 
+    {{-- MODAL 1: UPDATE STATUS PERIZINAN --}}
     <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -236,7 +231,7 @@
                             <select name="status" id="modal_select_status" class="form-select" required>
                                 <option value="proses">Proses</option>
                                 <option value="selesai">Selesai</option>
-                                <option value="dikembalikan">Dikembalikan</option>
+                                <option value="dikembalikan">Dilanjutkan</option>
                             </select>
                         </div>
                     </div>
@@ -248,7 +243,8 @@
             </div>
         </div>
     </div>
-    {{-- MODAL 2: EDIT DATA LENGKAP + CAPTCHA + VERIFIKASI PASSWORD --}}
+
+    {{-- MODAL 2: EDIT DATA UTAMA --}}
     <div class="modal fade" id="editDataModal" tabindex="-1" aria-labelledby="editDataModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -286,26 +282,6 @@
                             <label class="form-label fw-semibold">Alamat</label>
                             <textarea name="alamat" id="edit_alamat" class="form-control" rows="2" required></textarea>
                         </div>
-                        
-                        {{-- Validasi Tambahan Keamanan: Captcha Matematika --}}
-                        <div class="mb-3 p-3 bg-light border rounded-3 mb-2">
-                            <label class="form-label fw-bold text-secondary"><i class="fas fa-calculator me-1"></i> Verifikasi Keamanan (Captcha)</label>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span id="captcha_text" class="fw-bold fs-5 px-3 py-1 bg-secondary text-white rounded shadow-sm" style="letter-spacing: 2px; user-select: none;">3 + 5</span>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="btn_refresh_captcha" title="Ganti Pertanyaan">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                            </div>
-                            <input type="number" id="edit_captcha_input" name="captcha_jawaban" class="form-control" placeholder="Berapa hasil penjumlahan di atas?" required>
-                            <small class="text-danger d-none" id="captcha_error_msg">Jawaban Captcha salah! Silakan hitung kembali.</small>
-                        </div>
-
-                        {{-- Fitur Verifikasi Password Keamanan --}}
-                        <div class="mb-3 p-3 bg-light border border-danger-subtle rounded-3">
-                            <label class="form-label fw-bold text-danger"><i class="fas fa-lock me-1"></i> Verifikasi Password Anda</label>
-                            <input type="password" name="password_konfirmasi" class="form-control" placeholder="Masukkan password akun login Anda" required>
-                            <div class="form-text text-muted small">Wajib diisi agar data tidak diubah sembarangan.</div>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
@@ -315,7 +291,8 @@
             </div>
         </div>
     </div>
-    {{-- MODAL: DETAIL DATA --}}
+
+    {{-- MODAL 3: DETAIL DATA --}}
     <div class="modal fade" id="detailDataModal" tabindex="-1" aria-labelledby="detailDataModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -369,7 +346,6 @@
                                 <span id="detail_status" class="badge bg-secondary"></span>
                             </td>
                         </tr>
-                        
                         <tr class="table-info">
                             <th colspan="2" class="ps-3 text-dark small fw-bold text-uppercase text-right">Log Riwayat Data</th>
                         </tr>
@@ -394,8 +370,73 @@
         </div>
     </div>
 
+    {{-- MODAL 4: TAMBAH DATA (Sudah Diperbaiki) --}}
+    <div class="modal fade" id="modalTambahPerizinan" tabindex="-1" aria-labelledby="modalTambahPerizinanLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px;">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold d-flex align-items-center" id="modalTambahPerizinanLabel" style="color: #1a1a1a;">
+                        <i class="fas fa-folder-plus text-primary me-2 fs-4"></i> Tambah Data Perizinan Baru
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <form id="formTambahPerizinan" action="/dashboard/perizinan/store" method="POST" novalidate>
+                    @csrf
+                    <div class="modal-body px-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="add_no_antrian" class="form-label fw-semibold text-secondary small text-uppercase">Nomor Antrian</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fas fa-list-ol"></i></span>
+                                    <input type="text" class="form-control bg-light" id="add_no_antrian" name="no_antrian" placeholder="Memuat nomor..." readonly required>
+                                    <div class="invalid-feedback">Nomor antrian wajib diisi otomatis oleh sistem.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="add_nama_pemohon" class="form-label fw-semibold text-secondary small text-uppercase">Nama Pemohon</label>
+                                <input type="text" class="form-control" id="add_nama_pemohon" name="nama_pemohon" placeholder="Masukkan nama lengkap pemohon" required>
+                                <div class="invalid-feedback">Nama pemohon wajib diisi.</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="add_no_surat" class="form-label fw-semibold text-secondary small text-uppercase">Nomor Surat</label>
+                                <input type="text" class="form-control" id="add_no_surat" name="no_surat" placeholder="Masukkan nomor surat resmi" required>
+                                <div class="invalid-feedback">Nomor surat wajib diisi.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="add_phone" class="form-label fw-semibold text-secondary small text-uppercase">No. HP / WhatsApp Pemohon</label>
+                                <input type="text" class="form-control" id="add_phone" name="phone" placeholder="Contoh: 0812XXXXXXXX" required>
+                                <div class="invalid-feedback">Nomor kontak wajib diisi untuk tracking.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="add_deskripsi" class="form-label fw-semibold text-secondary small text-uppercase">Deskripsi / Perihal Perizinan</label>
+                            <textarea class="form-control" id="add_deskripsi" name="deskripsi_surat" rows="3" placeholder="Jelaskan perihal atau detail perizinan secara singkat..." required></textarea>
+                            <div class="invalid-feedback">Deskripsi perizinan wajib diisi.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="add_alamat" class="form-label fw-semibold text-secondary small text-uppercase">Alamat Pemohon</label>
+                            <textarea class="form-control" id="add_alamat" name="alamat" rows="2" placeholder="Masukkan alamat lengkap pemohon..." required></textarea>
+                            <div class="invalid-feedback">Alamat wajib diisi.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-light px-4 py-2" data-bs-dismiss="modal" style="border-radius: 8px;">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4 py-2" style="border-radius: 8px; background-color: #0061ff;">Simpan Data Perizinan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> {{-- Dipastikan jQuery aktif --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('js/dashboard.js') }}"></script>
 </body>
 </html>

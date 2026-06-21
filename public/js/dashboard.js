@@ -1,5 +1,3 @@
-// public/js/dashboard.js
-
 // =========================================================================
 // HELPER FUNCTION: Mengubah SEGALA FORMAT tanggal dari aplikasi ke Indo
 // =========================================================================
@@ -74,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (elInputCaptcha) elInputCaptcha.value = '';
         
         const elErrorMsg = document.getElementById('captcha_error_msg');
-        if (elErrorMsg) elErrorMsg.classList.add('data-none', 'd-none');
+        if (elErrorMsg) elErrorMsg.classList.add('d-none');
     }
 
     // Refresh captcha manual lewat tombol reload
@@ -97,9 +95,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // ---------------------------------------------------------------------
         // A. KONDISI: TOMBOL LIHAT DETAIL DIKLIK
         // ---------------------------------------------------------------------
-        const btnDetail = event.target.closest('.btn-detail-data') || event.target.closest('[data-antrian]:not([data-index])');
+        const btnDetail = event.target.closest('.btn-detail-data');
         
-        if (btnDetail && !btnDetail.hasAttribute('data-index') && btnDetail.hasAttribute('data-antrian')) {
+        if (btnDetail) {
             event.preventDefault();
 
             const antrian      = btnDetail.getAttribute('data-antrian') || '-';
@@ -110,15 +108,15 @@ document.addEventListener("DOMContentLoaded", function () {
             const alamat       = btnDetail.getAttribute('data-alamat') || '-';
             const statusText   = btnDetail.getAttribute('data-status') || 'Pending';
             
-            // Format Alur Alur Utama berkas
+            // Format Alur Utama berkas
             const tglPengajuan = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-pengajuan'));
             const tglProses    = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-proses'));
             const tglSelesai   = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-selesai'));
             
-            // Log Perubahan Data (Hanya terisi jika berkas pernah di-edit lewat updateData)
+            // Log Perubahan Data
             const createdBy    = btnDetail.getAttribute('data-created-by') || '-';
             const tglUpdate    = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-update'));
-            const updatedBy    = btnDetail.getAttribute('data-updated-by') || '-';
+            const updatedBy    = btnDetail.getAttribute('data-update-by') || '-'; 
 
             const elements = {
                 'detail_no_antrian': antrian,
@@ -159,7 +157,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     statusElement.classList.add('bg-secondary');
                 }
             }
-            
 
             const modalElement = document.getElementById('detailDataModal');
             if (modalElement) {
@@ -171,7 +168,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // ---------------------------------------------------------------------
         // B. KONDISI: TOMBOL UPDATE STATUS DIKLIK
         // ---------------------------------------------------------------------
-        const btnUpdateStatus = event.target.closest('.btn-update-status') || event.target.closest('[data-index]');
+        const btnUpdateStatus = event.target.closest('.btn-update-status');
         
         if (btnUpdateStatus) {
             event.preventDefault();
@@ -199,8 +196,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     elSelect.value = 'selesai';
                 } else if (statusLower === 'dikembalikan') {
                     elSelect.value = 'dikembalikan';
-                } else if (statusLower === 'proses' || statusLower === 'dalam proses') {
-                    elSelect.value = 'proses';
                 } else {
                     elSelect.value = 'proses';
                 }
@@ -214,9 +209,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // ---------------------------------------------------------------------
-        // C. KONDISI: TOMBOL EDIT DATA DIKLIK (SEKARANG SUDAH MENGISI LENGKAP)
+        // C. KONDISI: TOMBOL EDIT DATA DIKLIK
         // ---------------------------------------------------------------------
-        const btnEdit = event.target.closest('.btn-edit-data') || event.target.closest('[data-id]');
+        const btnEdit = event.target.closest('.btn-edit-data');
         
         if (btnEdit) {
             event.preventDefault();
@@ -229,8 +224,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const elEditPhone     = document.getElementById('edit_phone');
             const elEditAlamat    = document.getElementById('edit_alamat');
 
-            // Masukkan data pendukung dari elemen baris ke input modal
-            if (elEditId)        elEditId.value        = btnEdit.getAttribute('data-id') || '';
+            if (elEditId)        elEditId.value        = btnEdit.getAttribute('data-index') || '';
             if (elEditAntrian)   elEditAntrian.value   = btnEdit.getAttribute('data-antrian') || '';
             if (elEditNama)      elEditNama.value      = btnEdit.getAttribute('data-nama') || '';
             if (elEditSurat)     elEditSurat.value     = btnEdit.getAttribute('data-surat') || '';
@@ -238,7 +232,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (elEditPhone)     elEditPhone.value     = btnEdit.getAttribute('data-phone') || '';
             if (elEditAlamat)    elEditAlamat.value    = btnEdit.getAttribute('data-alamat') || '';
             
-            // Buat captcha baru setiap kali modal edit dibuka
             buatCaptchaBaru();
 
             const editModalEl = document.getElementById('editDataModal');
@@ -286,7 +279,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =========================================================================
-    // BARU: VERIFIKASI SIDE-CLIENT & ANIMASI LOADING SAAT SUBMIT
+    // VERIFIKASI CLIENT-SIDE & ANIMASI LOADING SAAT SUBMIT
     // =========================================================================
     const formEdit = document.getElementById('formEditData');
     if (formEdit) {
@@ -294,16 +287,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const inputUserCaptcha = parseInt(document.getElementById('edit_captcha_input').value);
             const elErrorMsg = document.getElementById('captcha_error_msg');
 
-            // Cek jika jawaban matematika buatan user tidak sinkron
-            if (inputUserCaptcha !== hasilKunciCaptcha) {
-                event.preventDefault(); // Batalkan submit form
+            if (isNaN(inputUserCaptcha) || inputUserCaptcha !== hasilKunciCaptcha) {
+                event.preventDefault(); 
                 if (elErrorMsg) elErrorMsg.classList.remove('d-none');
                 return false;
             }
 
             if (elErrorMsg) elErrorMsg.classList.add('d-none');
 
-            // Jalankan animasi loading & anti-double click jika validasi lolos
             const btnSubmit = formEdit.querySelector('button[type="submit"]');
             if (btnSubmit) {
                 btnSubmit.disabled = true;
@@ -315,7 +306,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Sediakan fallback untuk form update status modal biasa
     const formUpdateStatus = document.querySelector('#updateStatusModal form');
     if (formUpdateStatus) {
         formUpdateStatus.addEventListener('submit', function () {
@@ -329,9 +319,105 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+ // =========================================================================
+    // PROSES SIMPAN DATA PERIZINAN BARU (AJAX) - BERSIH & AMAN
+    // =========================================================================
+    const formTambah = document.getElementById('formTambahPerizinan');
+    if (formTambah) {
+        formTambah.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const form = this;
+
+            if (!form.checkValidity()) {
+                event.stopPropagation();
+                form.classList.add('was-validated');
+                return false;
+            }
+
+            const btnSubmit = form.querySelector('button[type="submit"]');
+            const originalText = btnSubmit.innerHTML;
+            
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Menyimpan...
+            `;
+
+            const formData = $(form).serialize();
+
+            $.ajax({
+    url: '/dashboard/perizinan/store',
+    type: 'POST',
+    data: formData, // Sesuaikan dengan variabel data form kamu
+    headers: {
+        'Accept': 'application/json', // <--- WAJIB TAMBAHKAN BARIS INI
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    },
+    success: function(response) {
+        // Handle jika sukses
+        alert('Data berhasil disimpan!');
+        location.reload();
+    },
+    error: function(xhr) {
+        console.error(xhr.responseText); // <--- Membantu trace error
+        
+        // Cek jika respons berupa JSON error dari validasi Laravel
+        if (xhr.status === 422) {
+            let errors = xhr.responseJSON.errors;
+            // Handle tampilan error validasi di form kamu...
+        } else {
+            alert('Gagal menyimpan data. Periksa Network tab atau log server.');
+        }
+    }
+});
+        });
+    }
+
+    // =========================================================================
+    // OTOMATISASI GENERATE NOMOR ANTRIAN
+    // =========================================================================
+    const modalTambahEl = document.getElementById('modalTambahPerizinan');
+    if (modalTambahEl) {
+        modalTambahEl.addEventListener('hidden.bs.modal', function () {
+            if (formTambah) {
+                formTambah.reset();
+                formTambah.classList.remove('was-validated');
+                const invalidInputs = formTambah.querySelectorAll('.is-invalid');
+                invalidInputs.forEach(input => input.classList.remove('is-invalid'));
+            }
+        });
+
+        modalTambahEl.addEventListener('show.bs.modal', function () {
+            const inputAntrian = document.getElementById('add_no_antrian');
+            if (inputAntrian) {
+                inputAntrian.value = 'Memuat nomor...'; 
+            }
+
+            $.ajax({
+                url: "/dashboard/perizinan/generate-antrian", 
+                type: "GET",
+                dataType: "json",
+                success: function (response) {
+                    if (response.success && inputAntrian) {
+                        inputAntrian.value = response.no_antrian;
+                    }
+                },
+                error: function (xhr) {
+                    if (inputAntrian) {
+                        inputAntrian.value = '';
+                        inputAntrian.placeholder = 'Gagal memuat otomatis, silakan ketik manual';
+                        inputAntrian.removeAttribute('readonly');
+                        inputAntrian.classList.remove('bg-light');
+                    }
+                    console.error("Gagal mendapatkan nomor antrian berkas:", xhr.responseText);
+                }
+            });
+        });
+    }
 });
 
-// Fungsi Konfirmasi Hapus Data
+// Fungsi Konfirmasi Hapus Data (Global Scope)
 window.konfirmasiHapus = function(event) {
     if (!confirm("Apakah Anda yakin ingin menghapus data perizinan ini?")) {
         event.preventDefault(); 

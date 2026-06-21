@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Schedule;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\PerizinanController;
 
 // ==========================================
 // 1. HALAMAN UMUM (GUEST / PUBLIC)
@@ -59,3 +60,6 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
+
+Route::get('/dashboard/perizinan/generate-antrian', [DashboardController::class, 'generateNoAntrian'])->name('perizinan.generate-antrian');
+Route::post('/dashboard/perizinan/store', [PerizinanController::class, 'store'])->name('perizinan.store');
