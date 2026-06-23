@@ -17,8 +17,7 @@ class UserController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('auth'), // Mengunci semua method agar wajib login
-            // Kunci kedua: Hanya izinkan jika pengguna adalah admin
+            new Middleware('auth'), 
             new Middleware(function (Request $request, $next) {
                 if (!auth()->user()->is_admin) {
                     // Jika user biasa mencoba masuk, lempar balik ke dashboard dengan pesan error
@@ -34,7 +33,6 @@ class UserController extends Controller implements HasMiddleware
         $this->middleware(function ($request, $next) {
             // Jika user yang login BUKAN Master Admin (is_admin != 1)
             if (auth()->user()->is_admin != 1) {
-                // Tendang kembali ke dashboard dengan pesan error
                 return redirect()->route('dashboard')->with('error', 'Anda tidak memiliki hak akses untuk membuka halaman Manajemen User.');
             }
             return $next($request);
