@@ -38,7 +38,7 @@ class LacakPerizinanController extends Controller
             $service = new GoogleSheetsService($client);
             $spreadsheetId = env('POST_SPREADSHEET_ID');
             
-            $range = 'Sheet1!A:D'; 
+            $range = 'Sheet1!A:N'; 
             $response = $service->spreadsheets_values->get($spreadsheetId, $range);
             $rows = $response->getValues();
 
@@ -52,14 +52,20 @@ class LacakPerizinanController extends Controller
                 if ($index === 0) continue;
 
                 //KOLOM A (INDEX 0) SEBAGAI NO_ANTRIAN
-                $noAntrianDiSheets = $row[0] ?? ''; 
+                $noAntrianDiSheets = $row[1] ?? ''; 
 
                 if (trim($noAntrianDiSheets) === $keyword) {
                     $hasilCari = [
-                        'no_antrian'   => $row[0] ?? '-', // Menyimpan nomor antrian
-                        'no_surat'     => $row[2] ?? '-', // Kolom C (Index 2)
-                        'nama_pemohon' => $row[1] ?? '-', // Kolom B (Index 1)
-                        'status'       => $row[3] ?? '-', // Kolom D (Index 3)
+                        'no_antrian'        => $row[1] ?? '-', // Menyimpan nomor antrian
+                        'no_surat'          => $row[3] ?? '-', 
+                        'nama_pemohon'      => $row[2] ?? '-', 
+                        'deskripsi_surat'   => $row[4] ?? '-', 
+                        'phone'             => $row[5] ?? '-', 
+                        'alamat'            => $row[6] ?? '-', 
+                        'tgl_pengajuan'     => $row[8] ?? '-', 
+                        'tgl_proses'        => $row[9] ?? '-', 
+                        'tgl_selesai'       => $row[10] ?? '-', 
+                        'status'            => $row[11] ?? '-', 
                     ];
                     break;
                 }

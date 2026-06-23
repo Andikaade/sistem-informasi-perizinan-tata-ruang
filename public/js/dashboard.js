@@ -1,5 +1,5 @@
 // =========================================================================
-// HELPER FUNCTION: Mengubah SEGALA FORMAT tanggal dari aplikasi ke Indo
+// HELPER FUNCTION: Mengubah FORMAT tanggal dari aplikasi ke Indo
 // =========================================================================
 function formatTanggalIndonesia(dateString) {
     if (!dateString || dateString.trim() === '-' || dateString.trim() === '' || dateString === 'null') return '-';
@@ -278,7 +278,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =========================================================================
-    // PROSES SUBMIT FORM EDIT DATA (REVISI FINAL)
+    // PROSES SUBMIT FORM EDIT DATA
     // =========================================================================
     const formEdit = document.getElementById('formEditData');
     if (formEdit) {

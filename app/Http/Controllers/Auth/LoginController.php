@@ -17,7 +17,7 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
-   // 2. Memproses data dari form login (Standar MySQL)
+   // 2. Memproses data dari form login
     public function login(Request $request)
     {
         // Validasi input form
@@ -26,7 +26,7 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        // Proses autentikasi langsung mencocokkan ke database MySQL Laragon
+        // Proses autentikasi langsung mencocokkan ke database
         if (Auth::attempt($credentials)) {
             
             // PROTEKSI KEAMANAN: Cek apakah akun user dalam status Non-Aktif

@@ -173,8 +173,10 @@
                                             data-deskripsi="{{ $deskripsi }}"
                                             data-phone="{{ $phone }}"
                                             data-alamat="{{ $alamat }}"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editDataModal">
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"  
+                                            data-bs-target="#editDataModal"
+                                            data-bs-title="Edit data">
                                         <i class="fas fa-edit"></i>
                                     </button>
 

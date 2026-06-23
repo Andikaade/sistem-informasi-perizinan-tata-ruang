@@ -10,7 +10,7 @@ use Google\Service\Sheets\BatchUpdateSpreadsheetRequest;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator; // Ditambahkan untuk memastikan facade Validator terpanggil dengan benar
+use Illuminate\Support\Facades\Validator; 
 
 class DashboardController extends Controller
 {
@@ -156,28 +156,28 @@ class DashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Validasi gagal.', 'errors' => $validator->errors()], 422);
         }
 
-       $rowIndex = (int)$request->input('row_index');
+        $rowIndex = (int)$request->input('row_index');
         $spreadsheetRow = $rowIndex + 2; 
 
         try {
             $service = $this->getGoogleSheetsService();
-            
-            // Tambahkan user yang sedang login dan tanggal saat ini
-            $namaAdmin = auth()->user()->name ?? 'System';
-            $tanggalSekarang = now()->format('d-m-Y H:i'); 
-
+        
+            // Data yang akan diupdate 
             $values = [
-                $request->input('nama_pemohon'),
-                $request->input('no_surat'),
-                $request->input('deskripsi_surat'),
-                $request->input('phone'),
-                $request->input('alamat'),
-                $namaAdmin,         // <--- TAMBAHKAN INI (Sesuaikan kolomnya)
-                $tanggalSekarang    // <--- TAMBAHKAN INI (Sesuaikan kolomnya)
+                $request->input('nama_pemohon'), 
+                $request->input('no_surat'),     
+                $request->input('deskripsi_surat'), 
+                $request->input('phone'),       
+                $request->input('alamat'),     
+                auth()->user()->name,           
+                now()->format('d-m-Y')           
             ];
 
-            $bodyData = new ValueRange(['values' => [$values]]);
+            $bodyData = new ValueRange(['values' => [[$values[0], $values[1], $values[2], $values[3], $values[4]]]]);
+            $service->spreadsheets_values->update($this->spreadsheetId, "Sheet1!C{$spreadsheetRow}:G{$spreadsheetRow}", $bodyData, ['valueInputOption' => 'RAW']);
 
+            $bodyMeta = new ValueRange(['values' => [[$values[5], $values[6]]]]);
+            $service->spreadsheets_values->update($this->spreadsheetId, "Sheet1!M{$spreadsheetRow}:N{$spreadsheetRow}", $bodyMeta, ['valueInputOption' => 'RAW']);
             // Contoh: Jika data awal C:G, maka sekarang harus C:I
             $rangeData = "Sheet1!C{$spreadsheetRow}:I{$spreadsheetRow}"; 
             
@@ -185,16 +185,15 @@ class DashboardController extends Controller
                 $this->spreadsheetId, 
                 $rangeData, 
                 $bodyData, 
-                ['valueInputOption' => 'USER_ENTERED'] // Gunakan USER_ENTERED agar format tanggal terbaca
+                ['valueInputOption' => 'USER_ENTERED'] // USER_ENTERED agar format tanggal terbaca
             );
 
-            return response()->json(['success' => true, 'message' => 'Data berhasil diupdate!'], 200);
-
-        } catch (\Exception $e) {
-            \Log::error("Error Update: " . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json(['success' => true]);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
         }
-    }
+
     public function destroy($index)
     {
         try {

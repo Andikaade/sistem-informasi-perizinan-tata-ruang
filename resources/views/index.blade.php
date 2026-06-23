@@ -87,8 +87,14 @@
                                     @if(isset($antrian))
                                         <div class="alert alert-success card shadow-sm p-4 text-dark mt-4">
                                             <h5 class="fw-bold mb-3"> Hasil Pencarian Antrian</h5>
-                                            <p class="mb-2"><strong>Nomor Surat:</strong> {{ $antrian['no_surat'] }}</p>
                                             <p class="mb-2"><strong>Nama Pemohon:</strong> {{ $antrian['nama_pemohon'] ?? '-' }}</p>
+                                            <p class="mb-2"><strong>Nomor Surat:</strong> {{ $antrian['no_surat'] }}</p>
+                                            <p class="mb-2"><strong>Deskripsi surat:</strong> {{ $antrian['deskripsi_surat'] ?? '-' }}</p>
+                                            <p class="mb-2"><strong>No Kontak :</strong> {{ $antrian['phone'] ?? '-' }}</p>
+                                            <p class="mb-2"><strong>Alamat:</strong> {{ $antrian['alamat'] ?? '-' }}</p>
+                                            <p class="mb-2"><strong>Tanggal Pengajuan:</strong> {{ $antrian['tgl_pengajuan'] ?? '-' }}</p>
+                                            <p class="mb-2"><strong>Tanggal Proses:</strong> {{ $antrian['tgl_proses'] ?? '-' }}</p>
+                                            <p class="mb-2"><strong>Tanggal Selesai:</strong> {{ $antrian['tgl_selesai'] ?? '-' }}</p>
                                             <p class="mb-0"><strong>Status Berkas:</strong> 
                                                 <span class="badge bg-primary text-white px-3 py-2">{{ $antrian['status'] ?? '-' }}</span>
                                             </p>
