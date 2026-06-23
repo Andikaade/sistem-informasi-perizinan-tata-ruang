@@ -74,7 +74,9 @@
                 </div>
                 
                 <div class="d-flex gap-2">
-                    <a href="#" class="btn btn-success btn-sm px-3 text-nowrap"><i class="fas fa-file-excel me-1"></i> Ekspor Excel</a>
+                    <button type="button" id="btnExportExcel" class="btn btn-success btn-sm px-3 text-nowrap">
+                        <i class="fas fa-file-excel me-1"></i> Ekspor Excel
+                    </button>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahPerizinan">
                         <i class="fas fa-plus me-1"></i> Tambah Perizinan
                     </button>
@@ -164,16 +166,15 @@
                                     <button type="button" 
                                             class="btn btn-sm btn-primary btn-edit-data" 
                                             title="Edit Data"
-                                            data-id="{{ $index }}" 
+                                            data-index="{{ $index }}" 
                                             data-antrian="{{ $noAntrian }}"
                                             data-nama="{{ $namaPemohon }}" 
                                             data-surat="{{ $noSurat }}"
                                             data-deskripsi="{{ $deskripsi }}"
                                             data-phone="{{ $phone }}"
                                             data-alamat="{{ $alamat }}"
-                                            data-bs-toggle="tooltip" 
-                                            data-bs-placement="top" 
-                                            data-bs-title="Ubah Data">
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editDataModal">
                                         <i class="fas fa-edit"></i>
                                     </button>
 
@@ -231,7 +232,7 @@
                             <select name="status" id="modal_select_status" class="form-select" required>
                                 <option value="proses">Proses</option>
                                 <option value="selesai">Selesai</option>
-                                <option value="dikembalikan">Dilanjutkan</option>
+                                <option value="dikembalikan">Dikembalikan</option>
                             </select>
                         </div>
                     </div>
@@ -244,7 +245,7 @@
         </div>
     </div>
 
-    {{-- MODAL 2: EDIT DATA UTAMA --}}
+    {{-- MODAL 2: EDIT DATA UTAMA (DUPLIKASI SUDAH DIHAPUS) --}}
     <div class="modal fade" id="editDataModal" tabindex="-1" aria-labelledby="editDataModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -256,7 +257,7 @@
                     @csrf 
                     @method('PUT')
                     <div class="modal-body">
-                        <input type="hidden" name="row_index" id="edit_row_index">
+                        <input type="hidden" name="row_index" id="edit_row_index" value="">
                         
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-muted">No Antrian</label>
@@ -292,6 +293,70 @@
         </div>
     </div>
 
+    {{-- MODAL 4: TAMBAH DATA --}}
+    <div class="modal fade" id="modalTambahPerizinan" tabindex="-1" aria-labelledby="modalTambahPerizinanLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px;">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold d-flex align-items-center" id="modalTambahPerizinanLabel" style="color: #1a1a1a;">
+                        <i class="fas fa-folder-plus text-primary me-2 fs-4"></i> Tambah Data Perizinan Baru
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <form id="formTambahPerizinan" action="/dashboard/perizinan/store" method="POST" novalidate>
+                    @csrf
+                    <div class="modal-body px-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold text-secondary small text-uppercase">Nomor Antrian</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fas fa-list-ol"></i></span>
+                                    <input type="text" class="form-control bg-light" id="add_no_antrian" name="no_antrian" placeholder="Memuat nomor..." readonly required>
+                                    <div class="invalid-feedback">Nomor antrian wajib diisi otomatis oleh sistem.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="add_nama_pemohon" class="form-label fw-semibold text-secondary small text-uppercase">Nama Pemohon</label>
+                                <input type="text" class="form-control" id="add_nama_pemohon" name="nama_pemohon" placeholder="Masukkan nama lengkap pemohon" required>
+                                <div class="invalid-feedback">Nama pemohon wajib diisi.</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="add_no_surat" class="form-label fw-semibold text-secondary small text-uppercase">Nomor Surat</label>
+                                <input type="text" class="form-control" id="add_no_surat" name="no_surat" placeholder="Masukkan nomor surat resmi" required>
+                                <div class="invalid-feedback">Nomor surat wajib diisi.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="add_phone" class="form-label fw-semibold text-secondary small text-uppercase">No. HP / WhatsApp Pemohon</label>
+                                <input type="text" class="form-control" id="add_phone" name="phone" placeholder="Contoh: 0812XXXXXXXX" required>
+                                <div class="invalid-feedback">Nomor kontak wajib diisi untuk tracking.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="add_deskripsi" class="form-label fw-semibold text-secondary small text-uppercase">Deskripsi / Perihal Perizinan</label>
+                            <textarea class="form-control" id="add_deskripsi" name="deskripsi_surat" rows="3" placeholder="Jelaskan perihal atau detail perizinan secara singkat..." required></textarea>
+                            <div class="invalid-feedback">Deskripsi perizinan wajib diisi.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="add_alamat" class="form-label fw-semibold text-secondary small text-uppercase">Alamat Pemohon</label>
+                            <textarea class="form-control" id="add_alamat" name="alamat" rows="2" placeholder="Masukkan alamat lengkap pemohon..." required></textarea>
+                            <div class="invalid-feedback">Alamat wajib diisi.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-light px-4 py-2" data-bs-dismiss="modal" style="border-radius: 8px;">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4 py-2" style="border-radius: 8px; background-color: #0061ff;">Simpan Data Perizinan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     {{-- MODAL 3: DETAIL DATA --}}
     <div class="modal fade" id="detailDataModal" tabindex="-1" aria-labelledby="detailDataModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -369,74 +434,10 @@
             </div>
         </div>
     </div>
-
-    {{-- MODAL 4: TAMBAH DATA (Sudah Diperbaiki) --}}
-    <div class="modal fade" id="modalTambahPerizinan" tabindex="-1" aria-labelledby="modalTambahPerizinanLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 12px;">
-                <div class="modal-header border-0 pt-4 px-4">
-                    <h5 class="modal-title fw-bold d-flex align-items-center" id="modalTambahPerizinanLabel" style="color: #1a1a1a;">
-                        <i class="fas fa-folder-plus text-primary me-2 fs-4"></i> Tambah Data Perizinan Baru
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                
-                <form id="formTambahPerizinan" action="/dashboard/perizinan/store" method="POST" novalidate>
-                    @csrf
-                    <div class="modal-body px-4">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="add_no_antrian" class="form-label fw-semibold text-secondary small text-uppercase">Nomor Antrian</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="fas fa-list-ol"></i></span>
-                                    <input type="text" class="form-control bg-light" id="add_no_antrian" name="no_antrian" placeholder="Memuat nomor..." readonly required>
-                                    <div class="invalid-feedback">Nomor antrian wajib diisi otomatis oleh sistem.</div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="add_nama_pemohon" class="form-label fw-semibold text-secondary small text-uppercase">Nama Pemohon</label>
-                                <input type="text" class="form-control" id="add_nama_pemohon" name="nama_pemohon" placeholder="Masukkan nama lengkap pemohon" required>
-                                <div class="invalid-feedback">Nama pemohon wajib diisi.</div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="add_no_surat" class="form-label fw-semibold text-secondary small text-uppercase">Nomor Surat</label>
-                                <input type="text" class="form-control" id="add_no_surat" name="no_surat" placeholder="Masukkan nomor surat resmi" required>
-                                <div class="invalid-feedback">Nomor surat wajib diisi.</div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="add_phone" class="form-label fw-semibold text-secondary small text-uppercase">No. HP / WhatsApp Pemohon</label>
-                                <input type="text" class="form-control" id="add_phone" name="phone" placeholder="Contoh: 0812XXXXXXXX" required>
-                                <div class="invalid-feedback">Nomor kontak wajib diisi untuk tracking.</div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="add_deskripsi" class="form-label fw-semibold text-secondary small text-uppercase">Deskripsi / Perihal Perizinan</label>
-                            <textarea class="form-control" id="add_deskripsi" name="deskripsi_surat" rows="3" placeholder="Jelaskan perihal atau detail perizinan secara singkat..." required></textarea>
-                            <div class="invalid-feedback">Deskripsi perizinan wajib diisi.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="add_alamat" class="form-label fw-semibold text-secondary small text-uppercase">Alamat Pemohon</label>
-                            <textarea class="form-control" id="add_alamat" name="alamat" rows="2" placeholder="Masukkan alamat lengkap pemohon..." required></textarea>
-                            <div class="invalid-feedback">Alamat wajib diisi.</div>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-footer border-0 pb-4 px-4 d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-light px-4 py-2" data-bs-dismiss="modal" style="border-radius: 8px;">Batal</button>
-                        <button type="submit" class="btn btn-primary px-4 py-2" style="border-radius: 8px; background-color: #0061ff;">Simpan Data Perizinan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{{ asset('js/dashboard.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="{{ asset('js/dashboard.js') }}?v={{ time() }}"></script>
 </body>
 </html>

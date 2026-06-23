@@ -9,7 +9,8 @@ use Google\Service\Sheets\ValueRange;
 use Google\Service\Sheets\BatchUpdateSpreadsheetRequest;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Hash; // Ditambahkan agar proses Hash::check pada updateData tidak error
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator; // Ditambahkan untuk memastikan facade Validator terpanggil dengan benar
 
 class DashboardController extends Controller
 {
@@ -29,13 +30,12 @@ class DashboardController extends Controller
     }
 
     /**
-     * REVISI: Generate Nomor Antrian otomatis dari data Google Sheets
+     * Generate Nomor Antrian otomatis dari data Google Sheets
      */
     public function generateNoAntrian()
     {
         try {
             $service = $this->getGoogleSheetsService();
-            // Ambil seluruh data dari kolom nomor antrian (Kolom B)
             $range = 'Sheet1!B2:B'; 
             
             $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
@@ -45,11 +45,9 @@ class DashboardController extends Controller
 
             if (!empty($rows)) {
                 foreach ($rows as $row) {
-                    // Kolom B adalah index pertama dari range target yang kita ambil
                     $noAntrian = $row[0] ?? ''; 
 
                     if (!empty($noAntrian)) {
-                        // Mengambil angka saja dari isi string (misal "0028" atau "A0028" diekstrak menjadi integer 28)
                         $numericPart = (int) filter_var($noAntrian, FILTER_SANITIZE_NUMBER_INT);
                         if ($numericPart > $maxNumber) {
                             $maxNumber = $numericPart;
@@ -58,11 +56,7 @@ class DashboardController extends Controller
                 }
             }
 
-            // Tambahkan nilai 1 dari nomor urut terbesar yang ditemukan di Google Sheets
             $nextNumber = $maxNumber + 1;
-
-            // Sesuaikan format padding menjadi 4 digit angka (misal: 29 menjadi "0029")
-            // Jika ingin menggunakan prefiks huruf, bisa diubah menjadi: 'A' . str_pad(...)
             $nextAntrian = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
             return response()->json([
@@ -104,7 +98,7 @@ class DashboardController extends Controller
         ]);
 
         $rowIndex = $request->input('row_index');
-        $spreadsheetRow = $rowIndex; 
+        $spreadsheetRow = (int)$rowIndex + 2; 
 
         try {
             $service = $this->getGoogleSheetsService();
@@ -113,30 +107,28 @@ class DashboardController extends Controller
             if ($statusInput === 'proses') {
                 $newStatus = 'Dalam Proses';
             } else {
-                $newStatus = ucfirst($statusInput); // "Selesai" atau "Dikembalikan"
+                $newStatus = ucfirst($statusInput);
             }
 
             // 1. UPDATE STATUS UTAMA (Kolom L)
             $rangeStatus = "Sheet1!L" . $spreadsheetRow; 
-            $bodyStatus = new \Google\Service\Sheets\ValueRange([
+            $bodyStatus = new ValueRange([
                 'values' => [[$newStatus]]
             ]);
             $service->spreadsheets_values->update($this->spreadsheetId, $rangeStatus, $bodyStatus, ['valueInputOption' => 'RAW']);
 
-            // Format tanggal pengajuan/proses/selesai (Template default: 18-Jun-2026)
             $dateFormatted = now()->format('j-M-Y'); 
             
             if ($statusInput === 'proses') {
-                // Isi Kolom J (tgl_proses)
                 $rangeProses = "Sheet1!J" . $spreadsheetRow;
-                $bodyProses = new \Google\Service\Sheets\ValueRange([
+                $bodyProses = new ValueRange([
                     'values' => [[$dateFormatted]]
                 ]);
                 $service->spreadsheets_values->update($this->spreadsheetId, $rangeProses, $bodyProses, ['valueInputOption' => 'RAW']);
                 
             } elseif ($statusInput === 'selesai' || $statusInput === 'dikembalikan') {
                 $rangeSelesai = "Sheet1!K" . $spreadsheetRow;
-                $bodySelesai = new \Google\Service\Sheets\ValueRange([
+                $bodySelesai = new ValueRange([
                     'values' => [[$dateFormatted]]
                 ]);
                 $service->spreadsheets_values->update($this->spreadsheetId, $rangeSelesai, $bodySelesai, ['valueInputOption' => 'RAW']);
@@ -149,78 +141,60 @@ class DashboardController extends Controller
         }
     }
 
-    public function updateData(Request $request)
+   public function updateData(Request $request)
     {
-        // 1. Validasi semua input yang dikirimkan dari modal form edit
-        $request->validate([
-            'row_index'           => 'required|integer',
-            'nama_pemohon'        => 'required|string',
-            'no_surat'            => 'required|string',
-            'deskripsi_surat'     => 'required|string',
-            'phone'               => 'required|string',
-            'alamat'              => 'required|string',
-            'captcha_jawaban'     => 'required|integer',
-            'password_konfirmasi' => 'required|string',
+        $validator = Validator::make($request->all(), [
+            'row_index'       => 'required',
+            'nama_pemohon'    => 'required|string',
+            'no_surat'        => 'required|string',
+            'deskripsi_surat' => 'required|string',
+            'phone'           => 'required|string',
+            'alamat'          => 'required|string',
         ]);
 
-        // 2. Proteksi Keamanan: Verifikasi kesesuaian password akun dengan admin yang login
-        if (!Hash::check($request->input('password_konfirmasi'), auth()->user()->password)) {
-            return redirect()->back()->with('error', 'Gagal memperbarui data: Konfirmasi password yang Anda masukkan salah!');
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'Validasi gagal.', 'errors' => $validator->errors()], 422);
         }
 
-        $spreadsheetRow = $request->input('row_index');
+       $rowIndex = (int)$request->input('row_index');
+        $spreadsheetRow = $rowIndex + 2; 
 
         try {
             $service = $this->getGoogleSheetsService();
             
-            // 3. UPDATE DATA UTAMA (Kolom C sampai G)
-            // C: nama_pemohon, D: no_surat, E: deskripsi_surat, F: phone, G: alamat
-            $rangeData = "Sheet1!C" . $spreadsheetRow . ":G" . $spreadsheetRow; 
+            // Tambahkan user yang sedang login dan tanggal saat ini
+            $namaAdmin = auth()->user()->name ?? 'System';
+            $tanggalSekarang = now()->format('d-m-Y H:i'); 
 
-            $bodyData = new ValueRange([
-                'values' => [[
-                    $request->input('nama_pemohon'),
-                    $request->input('no_surat'),
-                    $request->input('deskripsi_surat'),
-                    $request->input('phone'),
-                    $request->input('alamat')
-                ]]
-            ]);
+            $values = [
+                $request->input('nama_pemohon'),
+                $request->input('no_surat'),
+                $request->input('deskripsi_surat'),
+                $request->input('phone'),
+                $request->input('alamat'),
+                $namaAdmin,         // <--- TAMBAHKAN INI (Sesuaikan kolomnya)
+                $tanggalSekarang    // <--- TAMBAHKAN INI (Sesuaikan kolomnya)
+            ];
+
+            $bodyData = new ValueRange(['values' => [$values]]);
+
+            // Contoh: Jika data awal C:G, maka sekarang harus C:I
+            $rangeData = "Sheet1!C{$spreadsheetRow}:I{$spreadsheetRow}"; 
             
             $service->spreadsheets_values->update(
                 $this->spreadsheetId, 
                 $rangeData, 
                 $bodyData, 
-                ['valueInputOption' => 'RAW']
+                ['valueInputOption' => 'USER_ENTERED'] // Gunakan USER_ENTERED agar format tanggal terbaca
             );
 
-            // 4. FORMAT LOG RIWAYAT (Kolom M dan N)
-            $dateTimeLog = now()->format('d/m/Y H:i'); 
-            $adminName = auth()->user()->name ?? 'admin';
-
-            $rangeAudit = "Sheet1!M" . $spreadsheetRow . ":N" . $spreadsheetRow;
-
-            $bodyAudit = new ValueRange([
-                'values' => [[
-                    $adminName,   // Kolom M: Diisi Nama Admin
-                    $dateTimeLog  // Kolom N: Diisi Waktu Update (Tanggal & Jam)
-                ]]
-            ]);
-
-            $service->spreadsheets_values->update(
-                $this->spreadsheetId, 
-                $rangeAudit, 
-                $bodyAudit, 
-                ['valueInputOption' => 'RAW']
-            );
-
-            return redirect()->route('dashboard')->with('success', 'Data administrasi dan log riwayat berhasil diperbarui!');
+            return response()->json(['success' => true, 'message' => 'Data berhasil diupdate!'], 200);
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+            \Log::error("Error Update: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
-    
     public function destroy($index)
     {
         try {

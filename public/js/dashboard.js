@@ -2,7 +2,7 @@
 // HELPER FUNCTION: Mengubah SEGALA FORMAT tanggal dari aplikasi ke Indo
 // =========================================================================
 function formatTanggalIndonesia(dateString) {
-    if (!dateString || dateString.trim() === '-' || dateString.trim() === '') return '-';
+    if (!dateString || dateString.trim() === '-' || dateString.trim() === '' || dateString === 'null') return '-';
     
     const bulanIndo = {
         'jan': 'Januari', 'feb': 'Februari', 'mar': 'Maret', 'apr': 'April',
@@ -12,25 +12,23 @@ function formatTanggalIndonesia(dateString) {
 
     let cleanString = dateString.trim();
 
-    // Skenario 1: Jika format berisi tanda miring (Hasil dari updateData / Edit -> Contoh: 18/06/2026 10:15)
+    // Skenario 1: Jika format berisi tanda miring (Contoh: 18/06/2026 10:15 atau 18/6/2026)
     if (cleanString.includes('/')) {
         const parts = cleanString.split(' '); 
         const dateParts = parts[0].split('/');
         
         if (dateParts.length === 3) {
             const tgl = dateParts[0];
-            const namaBulan = [
-                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-            ][parseInt(dateParts[1]) - 1];
+            const daftarBulan = Object.values(bulanIndo);
+            const namaBulan = daftarBulan[parseInt(dateParts[1], 10) - 1] || dateParts[1];
             const thn = dateParts[2];
-            const jam = parts[1] ? ' ' + parts[1] : ''; // Pertahankan jam menit log edit
+            const jam = parts[1] ? ' ' + parts[1] : ''; 
             
             return `${tgl} ${namaBulan} ${thn}${jam}`;
         }
     }
 
-    // Skenario 2: Jika format berisi tanda strip text (Hasil dari alur utama -> Contoh: 17-Jun-2026)
+    // Skenario 2: Jika format berisi tanda strip text (Contoh: 17-Jun-2026)
     if (cleanString.includes('-')) {
         const parts = cleanString.split(' ');
         const datePart = parts[0];
@@ -39,7 +37,7 @@ function formatTanggalIndonesia(dateString) {
         const dateSplit = datePart.split('-');
         if (dateSplit.length === 3) {
             const tgl = dateSplit[0];
-            const blnRaw = dateSplit[1].toLowerCase();
+            const blnRaw = dateSplit[1].toLowerCase().substring(0, 3);
             const thn = dateSplit[2];
             
             const namaBulan = bulanIndo[blnRaw] || dateSplit[1]; 
@@ -52,34 +50,19 @@ function formatTanggalIndonesia(dateString) {
     return dateString;
 }
 
+// Fungsi Konfirmasi Hapus Data (Global Scope)
+window.konfirmasiHapus = function(event) {
+    if (!confirm("Apakah Anda yakin ingin menghapus data perizinan ini?")) {
+        event.preventDefault(); 
+        return false;
+    }
+    return true;
+};
+
+// =========================================================================
+// LINGKUP UTAMA: DOM CONTENT LOADED
+// =========================================================================
 document.addEventListener("DOMContentLoaded", function () {
-    // Variable Global untuk validasi Captcha Matematika Sederhana
-    let angkaUtama1 = 0;
-    let angkaUtama2 = 0;
-    let hasilKunciCaptcha = 0;
-
-    function buatCaptchaBaru() {
-        angkaUtama1 = Math.floor(Math.random() * 10) + 1; // Angka acak 1 - 10
-        angkaUtama2 = Math.floor(Math.random() * 10) + 1; // Angka acak 1 - 10
-        hasilKunciCaptcha = angkaUtama1 + angkaUtama2;
-        
-        const elCaptchaText = document.getElementById('captcha_text');
-        if (elCaptchaText) {
-            elCaptchaText.textContent = `${angkaUtama1} + ${angkaUtama2}`;
-        }
-        
-        const elInputCaptcha = document.getElementById('edit_captcha_input');
-        if (elInputCaptcha) elInputCaptcha.value = '';
-        
-        const elErrorMsg = document.getElementById('captcha_error_msg');
-        if (elErrorMsg) elErrorMsg.classList.add('d-none');
-    }
-
-    // Refresh captcha manual lewat tombol reload
-    const btnRefresh = document.getElementById('btn_refresh_captcha');
-    if (btnRefresh) {
-        btnRefresh.addEventListener('click', buatCaptchaBaru);
-    }
 
     // 1. Inisialisasi Tooltip Bootstrap (Bawaan)
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -88,15 +71,40 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // =========================================================================
-    // EVENT DELEGATION: Deteksi Klik Tombol Aksi di Tabel
+    // EVENT DELEGATION: Deteksi Klik Tombol Aksi di Tabel & Ekspor Excel
     // =========================================================================
     document.addEventListener('click', function (event) {
         
         // ---------------------------------------------------------------------
+        // JAMINAN UTAMA: TOMBOL EKSPOR EXCEL DIKLIK
+        // ---------------------------------------------------------------------
+        const btnExport = event.target.closest('#btnExportExcel');
+        if (btnExport) {
+            event.preventDefault();
+            const table = document.getElementById('perizinanTable');
+            if (!table) {
+                alert('Maaf, tabel perizinanTable tidak ditemukan di halaman ini.');
+                return;
+            }
+            try {
+                const wb = XLSX.utils.table_to_book(table, { raw: true });
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const formatTanggal = `${dd}-${mm}-${yyyy}`;
+                XLSX.writeFile(wb, `Data_Perizinan_${formatTanggal}.xlsx`); 
+            } catch (error) {
+                console.error('Gagal mengekspor data:', error);
+                alert('Terjadi kesalahan saat membuat file Excel. Periksa Console Log Browser.');
+            }
+            return;
+        }
+
+        // ---------------------------------------------------------------------
         // A. KONDISI: TOMBOL LIHAT DETAIL DIKLIK
         // ---------------------------------------------------------------------
         const btnDetail = event.target.closest('.btn-detail-data');
-        
         if (btnDetail) {
             event.preventDefault();
 
@@ -108,12 +116,10 @@ document.addEventListener("DOMContentLoaded", function () {
             const alamat       = btnDetail.getAttribute('data-alamat') || '-';
             const statusText   = btnDetail.getAttribute('data-status') || 'Pending';
             
-            // Format Alur Utama berkas
             const tglPengajuan = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-pengajuan'));
             const tglProses    = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-proses'));
             const tglSelesai   = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-selesai'));
             
-            // Log Perubahan Data
             const createdBy    = btnDetail.getAttribute('data-created-by') || '-';
             const tglUpdate    = formatTanggalIndonesia(btnDetail.getAttribute('data-tgl-update'));
             const updatedBy    = btnDetail.getAttribute('data-update-by') || '-'; 
@@ -135,12 +141,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             Object.keys(elements).forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    el.textContent = elements[id];
-                }
+                if (el) el.textContent = elements[id];
             });
             
-            // Manajemen Badge Warna Status
             const statusElement = document.getElementById('detail_status');
             if (statusElement) {
                 statusElement.textContent = statusText.toUpperCase();
@@ -169,7 +172,6 @@ document.addEventListener("DOMContentLoaded", function () {
         // B. KONDISI: TOMBOL UPDATE STATUS DIKLIK
         // ---------------------------------------------------------------------
         const btnUpdateStatus = event.target.closest('.btn-update-status');
-        
         if (btnUpdateStatus) {
             event.preventDefault();
 
@@ -212,7 +214,6 @@ document.addEventListener("DOMContentLoaded", function () {
         // C. KONDISI: TOMBOL EDIT DATA DIKLIK
         // ---------------------------------------------------------------------
         const btnEdit = event.target.closest('.btn-edit-data');
-        
         if (btnEdit) {
             event.preventDefault();
             
@@ -231,8 +232,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (elEditDeskripsi) elEditDeskripsi.value = btnEdit.getAttribute('data-deskripsi') || '';
             if (elEditPhone)     elEditPhone.value     = btnEdit.getAttribute('data-phone') || '';
             if (elEditAlamat)    elEditAlamat.value    = btnEdit.getAttribute('data-alamat') || '';
-            
-            buatCaptchaBaru();
 
             const editModalEl = document.getElementById('editDataModal');
             if (editModalEl) {
@@ -279,49 +278,46 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =========================================================================
-    // VERIFIKASI CLIENT-SIDE & ANIMASI LOADING SAAT SUBMIT
+    // PROSES SUBMIT FORM EDIT DATA (REVISI FINAL)
     // =========================================================================
     const formEdit = document.getElementById('formEditData');
     if (formEdit) {
         formEdit.addEventListener('submit', function (event) {
-            const inputUserCaptcha = parseInt(document.getElementById('edit_captcha_input').value);
-            const elErrorMsg = document.getElementById('captcha_error_msg');
+            event.preventDefault(); 
+            
+            const formData = new FormData(this);
+            const rowIndex = document.getElementById('edit_row_index').value;
 
-            if (isNaN(inputUserCaptcha) || inputUserCaptcha !== hasilKunciCaptcha) {
-                event.preventDefault(); 
-                if (elErrorMsg) elErrorMsg.classList.remove('d-none');
-                return false;
+            // Pastikan index ada
+            if (!rowIndex) {
+                alert('Error: Index baris tidak valid.');
+                return;
             }
 
-            if (elErrorMsg) elErrorMsg.classList.add('d-none');
+            formData.append('row_index', rowIndex); // Pastikan terkirim
+            formData.append('_method', 'PUT');
 
-            const btnSubmit = formEdit.querySelector('button[type="submit"]');
-            if (btnSubmit) {
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = `
-                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                    Menyimpan...
-                `;
-            }
+            $.ajax({
+                url: '/dashboard/update-data', 
+                type: 'POST', 
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                success: function(response) {
+                    // Beri waktu user melihat alert, lalu reload
+                    alert('Data berhasil diperbarui!');
+                    location.reload(); 
+                },
+                error: function(xhr) {
+                    alert('Gagal menyimpan perubahan. Silakan cek koneksi.');
+                }
+            });
         });
     }
 
-    const formUpdateStatus = document.querySelector('#updateStatusModal form');
-    if (formUpdateStatus) {
-        formUpdateStatus.addEventListener('submit', function () {
-            const btnSubmit = formUpdateStatus.querySelector('button[type="submit"]');
-            if (btnSubmit) {
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = `
-                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                    Menyimpan...
-                `;
-            }
-        });
-    }
-
- // =========================================================================
-    // PROSES SIMPAN DATA PERIZINAN BARU (AJAX) - BERSIH & AMAN
+    // =========================================================================
+    // PROSES SIMPAN DATA PERIZINAN BARU (AJAX)
     // =========================================================================
     const formTambah = document.getElementById('formTambahPerizinan');
     if (formTambah) {
@@ -336,7 +332,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             const btnSubmit = form.querySelector('button[type="submit"]');
-            const originalText = btnSubmit.innerHTML;
             
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = `
@@ -347,30 +342,28 @@ document.addEventListener("DOMContentLoaded", function () {
             const formData = $(form).serialize();
 
             $.ajax({
-    url: '/dashboard/perizinan/store',
-    type: 'POST',
-    data: formData, // Sesuaikan dengan variabel data form kamu
-    headers: {
-        'Accept': 'application/json', // <--- WAJIB TAMBAHKAN BARIS INI
-        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-    },
-    success: function(response) {
-        // Handle jika sukses
-        alert('Data berhasil disimpan!');
-        location.reload();
-    },
-    error: function(xhr) {
-        console.error(xhr.responseText); // <--- Membantu trace error
-        
-        // Cek jika respons berupa JSON error dari validasi Laravel
-        if (xhr.status === 422) {
-            let errors = xhr.responseJSON.errors;
-            // Handle tampilan error validasi di form kamu...
-        } else {
-            alert('Gagal menyimpan data. Periksa Network tab atau log server.');
-        }
-    }
-});
+                url: '/dashboard/perizinan/store',
+                type: 'POST',
+                data: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    alert('Data berhasil disimpan!');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = 'Simpan Data Perizinan';
+                    if (xhr.status === 422) {
+                        alert('Validasi gagal. Mohon periksa kembali inputan Anda.');
+                    } else {
+                        alert('Gagal menyimpan data. Periksa Network tab atau log server.');
+                    }
+                }
+            });
         });
     }
 
@@ -416,12 +409,3 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
-
-// Fungsi Konfirmasi Hapus Data (Global Scope)
-window.konfirmasiHapus = function(event) {
-    if (!confirm("Apakah Anda yakin ingin menghapus data perizinan ini?")) {
-        event.preventDefault(); 
-        return false;
-    }
-    return true;
-};
